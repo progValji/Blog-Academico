@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio Pagina</title>
+</head>
+<body>
+    <header>
+        <h1>Blog Academico</h1>
+        <nav>
+            <ul>
+                <li><a href="#">Incio</a>
+                    <a href="{{ url_for('login') }}?form=iniciar">Iniciar Sesion</a>
+                    <a href="{{ url_for('login') }}?form=registrar">Registrate</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <h1>Main de la pagina</h1>
+        <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Aperiam, quam?</p>
+    </main>
+</body>
+</html>
