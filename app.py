@@ -1,6 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
+import time
+from datetime import datetime, timedelta
+
+#Constantes de seguridad
+MAX_INTENTOS = 5
+TIEMPO_BLOQUEADO = 2 #MINUTOS
+RETRASO_BASE = 2 #SEGUNDOS
+
+def calcular_retraso_exponencial(intenos_fallidos):
+    if intenos_fallidos == 0: return 0
+    return RETRASO_BASE ** (intenos_fallidos - 1)
+
+def obtener_conexion():
+    return pymysql.connect(host='localhost',
+                        user='root',
+                        password='JuanFeliz7',
+                        database='blogacademico')
 
 app = Flask(__name__)
 
@@ -18,20 +35,74 @@ def login():
         contraseña = request.form.get('contraseña')
         
         try:
-            conexion = pymysql.connect(host='localhost',
-                                       user='root',
-                                       password='JuanFeliz7',
-                                       database='blogacademico')
+            conexion = obtener_conexion()
             cursor = conexion.cursor()
             
             if action == 'iniciar':
-                cursor.execute("""
-                                SELECT * FROM usuarios WHERE correo = %s
-                               """, (correo))
+                #buscar usuario
+                cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo))
                 resultado = cursor.fetchone()
-                if resultado and check_password_hash(resultado[3], contraseña): 
+
+                #si no se obtuvo nada, el usuario no existe
+                if not resultado:
+                    time.sleep(1)
+                    mensaje = 'Usuario o contraseña incorrectas'
+                    cursor.close()
+                    conexion.close()
+                    #no debe renderizar, quiero que mueste el mensaje sin recargar la pag
+                    return render_template('login.html', mensaje=mensaje)
+                
+                intentos_fallidos = resultado[5]
+                bloqueado_hasta = resultado[7]
+
+                #verificando si la cuenta esta bloqueada
+                if bloqueado_hasta:
+                    bloqueado_hasta_dt = datetime.strptime(str(bloqueado_hasta), '%Y-%m-%d %H:%M:%S')
+                    if datetime.now() < bloqueado_hasta_dt:
+                        # Cuenta aún bloqueada
+                        tiempo_restante = (bloqueado_hasta_dt - datetime.now()).total_seconds() / 60
+                        mensaje = f'Cuenta bloqueada. Intenta en {int(tiempo_restante)} minutos o solicita recuperación de contraseña.'
+                        cursor.close()
+                        conexion.close()
+                        return render_template('login.html', mensaje=mensaje)
+                    else:
+                        # Tiempo de bloqueo expiró: resetear intentos
+                        cursor.execute("""
+                            UPDATE usuarios 
+                            SET intentos_fallidos = 0, bloqueado_hasta = NULL
+                            WHERE id = %s
+                        """, (resultado[0]))
+                        conexion.commit()
+                        intentos_fallidos = 0
+
+                #aplicar retraso segun intentos previos
+                retraso = calcular_retraso_exponencial(intentos_fallidos)
+                time.sleep(retraso)
+                
+                # veficiar contraseña
+                if check_password_hash(resultado[3], contraseña):
+                    #Login exitoso
+                    cursor.execute("""
+                    UPDATE usuarios
+                    SET intentos_fallidos = 0, ultimo_intento = NULL, bloqueado_hasta=NULL
+                    WHERE id = %s
+                    """, (resultado[0])) #tal vez ultimo intento deberia guardar la fechaYhora
+                    conexion.commit()
+                    cursor.close()
+                    conexion.close()
                     return redirect(url_for('panel_control'))
-                else: mensaje = 'Correo o contraseña incorrectos'
+                else:
+                    intentos_fallidos += 1
+                    nuevo_bloqueado_hasta = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEADO) if intentos_fallidos >= 5 else None
+
+                    cursor.execute("""
+                        UPDATE usuarios
+                        SET intentos_fallidos = %s, ultimo_intento = NOW(), bloqueado_hasta = %s
+                        WHERE id = %s  
+                        """, (intentos_fallidos, nuevo_bloqueado_hasta, resultado[0]))
+                    conexion.commit()
+                    #mensaje generico
+                    mensaje = 'Usuario o contraseña incorrectos'
             
             elif action == 'registrar':
                 nombre = request.form.get('nombre')
