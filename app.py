@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 #Constantes de seguridad
 MAX_INTENTOS = 5
 TIEMPO_BLOQUEADO = 2 #MINUTOS
-TIEMPO_TOKEN = 5 #minutos -> despues 1 hora
+TIEMPO_TOKEN = 1 #hora
 RETRASO_BASE = 2 #SEGUNDOS
 
 def calcular_retraso_exponencial(intenos_fallidos):
@@ -35,8 +35,7 @@ def enviar_correo(nombre, token, correo):
     correo_enviado = False
 
     asunto = 'Recuperacion de Contraseña - Blog Academico'
-    informacion = f"""Hola {nombre}, ingresa al siguiente link para restablcer tu
-    contraseña: {enlace_recuperacion}"""
+    informacion = f"""Hola {nombre}, ingresa al siguiente link para restablcer tu contraseña: {enlace_recuperacion}"""
 
     try:
         msg = MIMEText(informacion)
@@ -48,7 +47,6 @@ def enviar_correo(nombre, token, correo):
             server.starttls()
             server.login(email_user, email_password)
             server.sendmail(email_user, correo, msg.as_string())
-            print('correo enviado')
             correo_enviado = True
     except Exception as e:
             print("Error al enviar el correo: ", e)
@@ -172,7 +170,7 @@ def solicitar_recuperacion():
             if resultado:
                 usuario_id, nombre_usuario = resultado
                 token = generar_token()
-                expira_token = datetime.now() + timedelta(minutes=TIEMPO_TOKEN)
+                expira_token = datetime.now() + timedelta(hours=TIEMPO_TOKEN)
 
                 cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE id = %s', (token, expira_token, usuario_id))
                 conexion.commit()
@@ -183,6 +181,63 @@ def solicitar_recuperacion():
             return render_template('solicitar_recuperacion.html', mensaje =mensaje)
         except Exception as e: return render_template('solicitar_recuperacion.html', mensaje=f'Error: {e}')
     return render_template('solicitar_recuperacion.html', mensaje = mensaje)
+
+@app.route('/restablecer_contraseña/<token>', methods=['GET', 'POST'])
+def restablecer_contraseña(token):
+    mensaje = None
+    token_valido = False
+
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
+        cursor.execute("""
+            SELECT id, nombre_usuario, correo FROM usuarios 
+            WHERE reset_token = %s AND token_expira > NOW()
+        """, (token))
+        resultado = cursor.fetchone()
+        
+        if resultado:
+            token_valido = True
+            usuario_id = resultado[0]
+            
+            if request.method == 'POST':
+                nueva_contraseña = request.form.get('nueva_contraseña')
+                confirmar_contraseña = request.form.get('confirmar_contraseña')
+                
+                if nueva_contraseña != confirmar_contraseña:
+                    mensaje = '❌ Las contraseñas no coinciden'
+                else:
+                    contraseña_hash = generate_password_hash(nueva_contraseña, method='pbkdf2:sha256')
+                    cursor.execute("""
+                        UPDATE usuarios 
+                        SET contraseña_hash = %s, 
+                            reset_token = NULL, 
+                            token_expira = NULL,
+                            intentos_fallidos = 0,
+                            bloqueado_hasta = NULL
+                        WHERE id = %s
+                    """, (contraseña_hash, usuario_id))
+                    conexion.commit()
+                    cursor.close()
+                    conexion.close()
+
+                    mensaje = '✅ Contraseña actualizada correctamente. Ya puedes iniciar sesión.'
+                    return render_template('restablecer_contraseña.html', 
+                                         mensaje=mensaje, 
+                                         token_valido=False,
+                                         exito=True)
+        else:
+            # Token inválido o expirado
+            token_valido = False
+            mensaje = '❌ Token inválido o expirado. Solicita un nuevo enlace de recuperación.'
+        
+        cursor.close()
+        conexion.close()
+    except Exception as e: 
+        mensaje = f'Error: {e}'
+    
+    return render_template('restablecer_contraseña.html', mensaje=mensaje, token_valido=token_valido)
 
 @app.route('/panel_control')
 def panel_control():

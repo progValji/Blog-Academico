@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer Contraseña - Blog Académico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #764ba2;
+        }
+        
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .mensaje {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .mensaje.exito {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .mensaje.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .links a:hover {
+            color: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if exito %}
+            <h2>✅ ¡Éxito!</h2>
+            <div class="mensaje exito">
+                {{ mensaje }}
+            </div>
+            <div class="links">
+                <p><a href="{{ url_for('login') }}">→ Ir al Login</a></p>
+            </div>
+        {% elif token_valido %}
+            <h2>🔐 Nueva Contraseña</h2>
+            <p class="subtitle">Ingresa tu nueva contraseña</p>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label for="nueva_contraseña">Nueva Contraseña:</label>
+                    <input type="password" id="nueva_contraseña" name="nueva_contraseña" required minlength="8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmar_contraseña">Confirmar Contraseña:</label>
+                    <input type="password" id="confirmar_contraseña" name="confirmar_contraseña" required minlength="8">
+                </div>
+                
+                <button type="submit" class="btn">Restablecer Contraseña</button>
+            </form>
+            
+            {% if mensaje %}
+                <div class="mensaje {% if '✅' in mensaje %}exito{% else %}error{% endif %}">
+                    {{ mensaje }}
+                </div>
+            {% endif %}
+        {% else %}
+            <h2>❌ Token Inválido</h2>
+            <div class="mensaje error">
+                {{ mensaje }}
+            </div>
+            <div class="links">
+                <p><a href="{{ url_for('solicitar_recuperacion')}}">← Solicitar nuevo enlace</a></p>
+                <p><a href="{{ url_for('login') }}">← Ir al Login</a></p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
