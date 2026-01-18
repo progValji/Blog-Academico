@@ -4,8 +4,7 @@ import pymysql
 import time
 import secrets
 from datetime import datetime, timedelta
-import smtplib
-from email.mime.text import MIMEText
+from flask_mail import Mail, Message
 
 #Constantes de seguridad
 MAX_INTENTOS = 5
@@ -27,33 +26,32 @@ def obtener_conexion():
                         database='blogacademico')
 
 def enviar_correo(nombre, token, correo):
-    email_user = "jl3184502@gmail.com"
-    email_password = "rryy cmpt ylyu dfik"
-    smtp_server = "smtp.gmail.com"
-    port = 587  
+    mail = Mail(app)
     enlace_recuperacion = f'http://localhost:5000/restablecer_contraseña/{token}'
-    correo_enviado = False
-
-    asunto = 'Recuperacion de Contraseña - Blog Academico'
-    informacion = f"""Hola {nombre}, ingresa al siguiente link para restablcer tu contraseña: {enlace_recuperacion}"""
-
-    try:
-        msg = MIMEText(informacion)
-        msg['Subject'] = asunto
-        msg['From'] = email_user
-        msg['To'] = correo
-
-        with smtplib.SMTP(smtp_server, port) as server:
-            server.starttls()
-            server.login(email_user, email_password)
-            server.sendmail(email_user, correo, msg.as_string())
-            correo_enviado = True
-    except Exception as e:
-            print("Error al enviar el correo: ", e)
-    return correo_enviado
+    msg = Message(
+        subject='Recuperación de contraseña - Blog Académico',
+        recipients=[correo],
+        html=f"""
+        <h2>Hola {nombre},</h2>
+        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+        <p><a href="{enlace_recuperacion}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            Restablecer Contraseña
+        </a></p>
+        <p>Este enlace expira en 1 hora.</p>
+        <p>Si no solicitaste esto, ignora este mensaje.</p>
+        """
+    )
+    mail.send(msg)
 
 
 app = Flask(__name__)
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = "jl3184502@gmail.com"
+app.config['MAIL_PASSWORD'] = "rryy cmpt ylyu dfik"
+app.config['MAIL_DEFAULT_SENDER'] = ('Blog Académico', 'jl3184502@gmail.com')
 
 @app.route('/')
 def index():
@@ -137,13 +135,18 @@ def login():
             
             elif action == 'registrar':
                 nombre = request.form.get('nombre')
-                contraseña_hash = generate_password_hash(contraseña, method='pbkdf2:sha256')
-                cursor.execute("""
-                                INSERT INTO usuarios (nombre_usuario, correo, contraseña_hash)
-                                VALUES (%s, %s, %s)
-                               """, (nombre, correo, contraseña_hash))
-                conexion.commit()
-                return redirect(url_for('panel_control'))
+                
+                cursor.execute("SELECT id FROM usuarios WHERE correo = %s", (correo,))
+                if cursor.fetchone():
+                    mensaje = 'Verifica la información e intenta nuevamente'
+                else:
+                    contraseña_hash = generate_password_hash(contraseña, method='pbkdf2:sha256')
+                    cursor.execute("""
+                                    INSERT INTO usuarios (nombre_usuario, correo, contraseña_hash)
+                                    VALUES (%s, %s, %s)
+                                   """, (nombre, correo, contraseña_hash))
+                    conexion.commit()
+                    return redirect(url_for('panel_control'))
             
             cursor.close()
             conexion.close()
@@ -174,8 +177,9 @@ def solicitar_recuperacion():
 
                 cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE id = %s', (token, expira_token, usuario_id))
                 conexion.commit()
-                respuesta = enviar_correo(nombre_usuario, token, correo)
-            mensaje = 'Se envio un enlace de recuperacion a tu correo' if respuesta else 'Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion'
+                enviar_correo(nombre_usuario, token, correo)
+                mensaje = 'Se envio un enlace de recuperacion a tu correo'
+            else: mensaje = 'Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion'
             cursor.close()
             conexion.close()
             return render_template('solicitar_recuperacion.html', mensaje =mensaje)
