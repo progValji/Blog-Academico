@@ -4,21 +4,56 @@ import pymysql
 import time
 import secrets
 from datetime import datetime, timedelta
+import smtplib
+from email.mime.text import MIMEText
 
 #Constantes de seguridad
 MAX_INTENTOS = 5
 TIEMPO_BLOQUEADO = 2 #MINUTOS
+TIEMPO_TOKEN = 5 #minutos -> despues 1 hora
 RETRASO_BASE = 2 #SEGUNDOS
 
 def calcular_retraso_exponencial(intenos_fallidos):
     if intenos_fallidos == 0: return 0
     return RETRASO_BASE ** (intenos_fallidos - 1)
 
+def generar_token():
+    return secrets.token_urlsafe(32)
+
 def obtener_conexion():
     return pymysql.connect(host='localhost',
                         user='root',
                         password='JuanFeliz7',
                         database='blogacademico')
+
+def enviar_correo(nombre, token, correo):
+    email_user = "jl3184502@gmail.com"
+    email_password = "rryy cmpt ylyu dfik"
+    smtp_server = "smtp.gmail.com"
+    port = 587  
+    enlace_recuperacion = f'http://localhost:5000/restablecer_contraseña/{token}'
+    correo_enviado = False
+
+    asunto = 'Recuperacion de Contraseña - Blog Academico'
+    informacion = f"""Hola {nombre}, ingresa al siguiente link para restablcer tu
+    contraseña: {enlace_recuperacion}"""
+
+    try:
+        msg = MIMEText(informacion)
+        msg['Subject'] = asunto
+        msg['From'] = email_user
+        msg['To'] = correo
+
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.starttls()
+            server.login(email_user, email_password)
+            server.sendmail(email_user, correo, msg.as_string())
+            print('correo enviado')
+            correo_enviado = True
+    except Exception as e:
+            print("Error al enviar el correo: ", e)
+    return correo_enviado
+
 
 app = Flask(__name__)
 
@@ -120,8 +155,9 @@ def login():
     
     return render_template('login.html', mensaje=mensaje)
 
-@app.route('/reset_password', methods=['GET', 'POST'])
-def reset_password():
+@app.route('/solicitar_recuperacion', methods=['GET', 'POST'])
+def solicitar_recuperacion():
+    mensaje = None
     if request.method == 'POST':
         correo = request.form.get('correo')
 
@@ -129,24 +165,24 @@ def reset_password():
             conexion = obtener_conexion()
             cursor = conexion.cursor()
 
-            cursor.execute('SELECT id FROM usuarios WHERE correo = %s', (correo))
+            cursor.execute('SELECT id, nombre_usuario FROM usuarios WHERE correo = %s', (correo))
             resultado = cursor.fetchone()
+            respuesta = None
 
             if resultado:
-                token = secrets.token_urlsafe(32)
-                """expira_token = time.time() + 3600
+                usuario_id, nombre_usuario = resultado
+                token = generar_token()
+                expira_token = datetime.now() + timedelta(minutes=TIEMPO_TOKEN)
 
-                cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE correo = %s', (token, expira_token, correo))
-                conexion.commit()"""
-                # Y luego: enviar email con el enlace de reset
-                print('el usuario existe')
-                print(token)
-
+                cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE id = %s', (token, expira_token, usuario_id))
+                conexion.commit()
+                respuesta = enviar_correo(nombre_usuario, token, correo)
+            mensaje = 'Se envio un enlace de recuperacion a tu correo' if respuesta else 'Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion'
             cursor.close()
             conexion.close()
-            return render_template('reset_password.html', mensaje = 'Si el correo existe, revisa tu correo electronico')
-        except Exception as e: return render_template('reset_password.html', mensaje='Error en el servidor')
-    return render_template('reset_password.html')
+            return render_template('solicitar_recuperacion.html', mensaje =mensaje)
+        except Exception as e: return render_template('solicitar_recuperacion.html', mensaje=f'Error: {e}')
+    return render_template('solicitar_recuperacion.html', mensaje = mensaje)
 
 @app.route('/panel_control')
 def panel_control():
