@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 import time
+import secrets
 from datetime import datetime, timedelta
 
 #Constantes de seguridad
@@ -43,13 +44,11 @@ def login():
                 cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo))
                 resultado = cursor.fetchone()
 
-                #si no se obtuvo nada, el usuario no existe
                 if not resultado:
                     time.sleep(1)
                     mensaje = 'Usuario o contraseña incorrectas'
                     cursor.close()
                     conexion.close()
-                    #no debe renderizar, quiero que mueste el mensaje sin recargar la pag
                     return render_template('login.html', mensaje=mensaje)
                 
                 intentos_fallidos = resultado[5]
@@ -101,7 +100,6 @@ def login():
                         WHERE id = %s  
                         """, (intentos_fallidos, nuevo_bloqueado_hasta, resultado[0]))
                     conexion.commit()
-                    #mensaje generico
                     mensaje = 'Usuario o contraseña incorrectos'
             
             elif action == 'registrar':
@@ -121,6 +119,34 @@ def login():
             mensaje = f'Error: {str(e)}'
     
     return render_template('login.html', mensaje=mensaje)
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'POST':
+        correo = request.form.get('correo')
+
+        try:
+            conexion = obtener_conexion()
+            cursor = conexion.cursor()
+
+            cursor.execute('SELECT id FROM usuarios WHERE correo = %s', (correo))
+            resultado = cursor.fetchone()
+
+            if resultado:
+                token = secrets.token_urlsafe(32)
+                """expira_token = time.time() + 3600
+
+                cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE correo = %s', (token, expira_token, correo))
+                conexion.commit()"""
+                # Y luego: enviar email con el enlace de reset
+                print('el usuario existe')
+                print(token)
+
+            cursor.close()
+            conexion.close()
+            return render_template('reset_password.html', mensaje = 'Si el correo existe, revisa tu correo electronico')
+        except Exception as e: return render_template('reset_password.html', mensaje='Error en el servidor')
+    return render_template('reset_password.html')
 
 @app.route('/panel_control')
 def panel_control():
