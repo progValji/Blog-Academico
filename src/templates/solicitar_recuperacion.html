@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/output.css') }}">
+    <title>¿Olvidaste tu contraseña? - Blog Academico</title>
+</head>
+<body class="bg-fondo h-screen flex flex-col items-center justify-center gap-7">
+    
+    <form method="post" class="w-[90%] max-w-lg bg-azul__petroleo text-white p-8
+    rounded-xl flex flex-col gap-8 shadow-xl">
+        <div>
+            <h1 class="text-3xl font-bold mb-4 sm:text-center">Resetea tu contraseña</h1>
+            <p>Introduzca la dirección de correo electrónico verificada de su cuenta de usuario y 
+                le enviaremos un enlace para restablecer la contraseña</p>
+        </div>
+
+        <div class="input__formulario">
+            <input type="email" name="correo" id="correo" placeholder="" required>
+            <label for="correo">Correo Electronico</label>
+            <span>El input esta vacio ❌</span>
+        </div>
+
+        <button type="submit" class="submit__formulario">Enviar Correo</button>
+    </form>
+
+    {% if mensaje %}
+        <h1 class="text-xl text-verde__menta font-semibold">{{mensaje}}</h1>
+    {% endif %}
+
+    <div class="links">
+        <p><a href="{{ url_for('login') }}" class="hover:font-bold">← Volver al Login</a></p>
+    </div>
+
+    <script src="{{ url_for('static', filename='JS/validar_email.js')}}"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme{
+    --color-fondo: #fff;
+    --color-azul__petroleo: #2B6E8C;
+    --color-negro__suave: #333333;
+    --color-verde__menta: #4ECDC4;
+    --color-gris__neutral: #E8E8E8;
+    --color-errores: #FFA726;
+}
+
+@layer base{
+    button{cursor: pointer;}
+}
+
+@layer components{
+    .container{
+        width: min(1200px, 90%);
+        margin: 0 auto;
+    }
+
+    .submit__formulario{
+        background-color: var(--color-fondo);
+        color: #1f3f4d;
+        border: none;
+        border-radius: 12px;
+        padding: .8rem 0;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 
+            background-color 0.5s ease,
+            transform 0.5s ease,
+            box-shadow 0.5s ease;
+
+        &:hover{
+            background: #f1f5f7;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        &:active{
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+        }
+    }
+
+    .input__formulario {
+        height: 75px;
+        position: relative;
+        background-color: inherit;
+
+        & input {
+            width: 100%;
+            padding: 0.8rem 0.7rem;
+            border: 1px solid;
+            outline: none;
+            transition: border-color 0.3s ease;
+
+            &:focus {
+                border-color: var(--color-verde__menta);
+            }
+
+            &:focus + label,
+            &:not(:placeholder-shown) + label{
+                top: -0.5rem;
+                left: 0.7rem;
+                font-size: 0.8rem;
+                transform: translateY(0);
+                background: inherit; 
+                padding: 0 .3rem;
+            }
+        }
+
+        & label {
+            position: absolute;
+            top: 30%;
+            transform: translateY(-30%);
+            left: 0.7rem;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        & span{opacity: 0;}
+    }
+}

@@ -5,6 +5,7 @@ import time
 import secrets
 from datetime import datetime, timedelta
 from flask_mail import Mail, Message
+import os
 
 #Constantes de seguridad
 MAX_INTENTOS = 5
@@ -44,7 +45,10 @@ def enviar_correo(nombre, token, correo):
     mail.send(msg)
 
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder=os.path.join('src', 'templates'),
+            static_folder='src/static',
+            static_url_path='/static')
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
