@@ -1,0 +1,8 @@
+export function validar_email(valor){
+    if(!valor.trim())return 'Ingresa un correo'
+
+    const regex = /^[-\w.%+]{1,64}@(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63}$/i
+    if(!regex.test(valor)) return 'Correo no valido ❌'
+
+    return ''
+}

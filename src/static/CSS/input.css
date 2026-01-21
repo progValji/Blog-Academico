@@ -11,6 +11,11 @@
 
 @layer base{
     button{cursor: pointer;}
+
+    button:disabled{
+        opacity: 0.5;
+        pointer-events: none;
+    }
 }
 
 @layer components{
@@ -83,6 +88,10 @@
             right: 0.7rem;
         }
 
-        & span{opacity: 0;}
+        & span{
+            opacity: 0;
+            font-size: .8rem;
+            color: var(--color-errores);
+        }
     }
 }

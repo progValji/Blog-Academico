@@ -19,10 +19,11 @@
         <div class="input__formulario">
             <input type="email" name="correo" id="correo" placeholder="" required>
             <label for="correo">Correo Electronico</label>
-            <span>El input esta vacio ❌</span>
+            <span></span>
         </div>
 
-        <button type="submit" class="submit__formulario bg-fondo text-negro__suave">Enviar Correo</button>
+        <button type="submit" disabled
+        class="submit__formulario bg-fondo text-negro__suave">Enviar Correo</button>
     </form>
 
     {% if mensaje %}
@@ -33,6 +34,10 @@
         <p><a href="{{ url_for('login') }}" class="hover:font-bold">← Volver al Login</a></p>
     </div>
 
-    <script src="{{ url_for('static', filename='JS/validar_email.js')}}"></script>
+    <script type="module">
+        import { inicializar_validacion_formulario } from '../static/JS/form__validador.js'
+        const form = document.querySelector('form')
+        inicializar_validacion_formulario(form)
+    </script>
 </body>
 </html>

@@ -326,6 +326,10 @@
   button {
     cursor: pointer;
   }
+  button:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 }
 @layer components {
   .container {
@@ -386,6 +390,8 @@
     }
     & span {
       opacity: 0;
+      font-size: .8rem;
+      color: var(--color-errores);
     }
   }
 }
