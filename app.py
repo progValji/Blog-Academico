@@ -214,7 +214,7 @@ def restablecer_contraseña(token):
                 confirmar_contraseña = request.form.get('confirmar_contraseña')
                 
                 if nueva_contraseña != confirmar_contraseña:
-                    mensaje = '❌ Las contraseñas no coinciden'
+                    mensaje = '❌ Las contraseñas no coinciden ❌'
                 else:
                     contraseña_hash = generate_password_hash(nueva_contraseña, method='pbkdf2:sha256')
                     cursor.execute("""
@@ -238,7 +238,7 @@ def restablecer_contraseña(token):
         else:
             # Token inválido o expirado
             token_valido = False
-            mensaje = '❌ Token inválido o expirado. Solicita un nuevo enlace de recuperación.'
+            mensaje = 'Token inválido o expirado. Solicita un nuevo enlace de recuperación.'
         
         cursor.close()
         conexion.close()

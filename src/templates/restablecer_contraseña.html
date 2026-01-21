@@ -3,173 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/output.css')}}">
     <title>Restablecer Contraseña - Blog Académico</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-            padding: 40px;
-        }
-        
-        h2 {
-            color: #333;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        
-        .subtitle {
-            color: #666;
-            font-size: 14px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-        }
-        
-        input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        input[type="password"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .btn:hover {
-            background-color: #764ba2;
-        }
-        
-        .btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .mensaje {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .mensaje.exito {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .mensaje.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .links {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-        
-        .links a {
-            color: #667eea;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .links a:hover {
-            color: #764ba2;
-        }
-    </style>
 </head>
-<body>
-    <div class="container">
+<body class="bg-fondo h-screen flex flex-col items-center justify-center gap-8">
         {% if exito %}
-            <h2>✅ ¡Éxito!</h2>
-            <div class="mensaje exito">
-                {{ mensaje }}
+        <section class="w-90 max-w-[90%] rounded-xl bg-azul__petroleo px-10 py-16 text-white">
+            <h2 class="text-3xl font-bold sm:text-center">✅ ¡Éxito!</h2>
+            <p class="mt-4">{{ mensaje }}</p>
+            <div class="mt-8 text-center">
+            <p><a href="{{ url_for('login') }}" class="hover:font-bold">→ Ir al Login</a></p>
             </div>
-            <div class="links">
-                <p><a href="{{ url_for('login') }}">→ Ir al Login</a></p>
-            </div>
+        </section>
         {% elif token_valido %}
-            <h2>🔐 Nueva Contraseña</h2>
-            <p class="subtitle">Ingresa tu nueva contraseña</p>
-            
-            <form method="POST">
-                <div class="form-group">
-                    <label for="nueva_contraseña">Nueva Contraseña:</label>
-                    <input type="password" id="nueva_contraseña" name="nueva_contraseña" required minlength="8">
-                </div>
+            <section class="w-90  max-w-[90%] shadow-2xl rounded-xl py-14
+             text-white px-8 bg-azul__petroleo">
+                <h2 class="text-3xl font-bold sm:text-center">🔐 Nueva Contraseña 🔐</h2>
+                <p class="mt-4">Ingresa tu nueva contraseña</p>
                 
-                <div class="form-group">
-                    <label for="confirmar_contraseña">Confirmar Contraseña:</label>
-                    <input type="password" id="confirmar_contraseña" name="confirmar_contraseña" required minlength="8">
-                </div>
-                
-                <button type="submit" class="btn">Restablecer Contraseña</button>
-            </form>
-            
+                <form method="POST" class="mt-8 flex flex-col gap-4 bg-inherit">
+                    <div class="input__formulario">
+                        <input type="password" id="nueva_contraseña" name="nueva_contraseña" 
+                        placeholder="" required minlength="8">
+                        <label for="nueva_contraseña">Nueva Contraseña</label>
+                        <button type="button" id="tooglePassword" data-visible="false">👁️</button>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="password" id="confirmar_contraseña" name="confirmar_contraseña" 
+                        placeholder="" required minlength="8">
+                        <label for="confirmar_contraseña">Confirmar Contraseña</label>
+                        <button type="button" id="tooglePassword" data-visible="false">👁️</button>
+                        <span></span>
+                    </div>
+                    
+                    <button type="submit" class="submit__formulario bg-fondo text-negro__suave">Restablecer Contraseña</button>
+                </form>
+            </section>
             {% if mensaje %}
-                <div class="mensaje {% if '✅' in mensaje %}exito{% else %}error{% endif %}">
-                    {{ mensaje }}
-                </div>
+                <p class="text-errores font-bold">{{ mensaje }}</p>
             {% endif %}
         {% else %}
-            <h2>❌ Token Inválido</h2>
-            <div class="mensaje error">
-                {{ mensaje }}
-            </div>
-            <div class="links">
-                <p><a href="{{ url_for('solicitar_recuperacion')}}">← Solicitar nuevo enlace</a></p>
-                <p><a href="{{ url_for('login') }}">← Ir al Login</a></p>
-            </div>
+            <section class="w-90 max-w-[90%] h-90 bg-azul__petroleo text-white m-auto shadow-2xl 
+            py-16 px-10 rounded-xl
+            flex flex-col">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold">Token Inválido 🚫</h2>
+                    <p class="mt-4">{{ mensaje }}</p>
+                </div>
+                <div class="mt-auto text-center">
+                    <p><a href="{{ url_for('solicitar_recuperacion')}}" class= "hover:font-bold">
+                        ← Solicitar nuevo enlace</a></p>
+                    <p class="mt-4"><a href="{{ url_for('login') }}" class="hover:font-bold">← Ir al Login</a></p>
+                </div>
+            </section>
         {% endif %}
-    </div>
+
+        <script src="{{ url_for('static', filename='JS/toogle_password.js') }}"></script>
+        <script src="{{ url_for('static', filename='JS/validar_password.js') }}"></script>
 </body>
 </html>

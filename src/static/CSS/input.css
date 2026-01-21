@@ -20,20 +20,16 @@
     }
 
     .submit__formulario{
-        background-color: var(--color-fondo);
-        color: #1f3f4d;
         border: none;
         border-radius: 12px;
         padding: .8rem 0;
         cursor: pointer;
         font-weight: bold;
         transition: 
-            background-color 0.5s ease,
             transform 0.5s ease,
             box-shadow 0.5s ease;
 
         &:hover{
-            background: #f1f5f7;
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
@@ -78,6 +74,13 @@
             left: 0.7rem;
             pointer-events: none;
             transition: all 0.3s ease;
+        }
+
+        & button{
+            position: absolute;
+            top: 30%;
+            transform: translateY(-30%);
+            right: 0.7rem;
         }
 
         & span{opacity: 0;}
