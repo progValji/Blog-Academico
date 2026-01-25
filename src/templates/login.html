@@ -3,87 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicia Sesión</title>
+    <link rel="stylesheet" href="../static/CSS/output.css">
     <style>
-        .form-container {
-            display: none;
-            animation: slideIn 0.5s ease-in-out;
+        #iniciar__form{display: none;}
+
+        .form__container{display: block; position: relative;}
+
+        .form, .overlay__panel {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            transform: translateY(40px) scale(.9);
+            transition: 
+                opacity 1s ease,
+                transform 1s ease;
+            pointer-events: none;
         }
-        .form-container.active {
-            display: block;
+
+        .login__active, .overlay__active{
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+            position: relative;
         }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+
     </style>
+    <title>Inicia Sesión - Blog Academico</title>
 </head>
-<body>
-    <div id="iniciar" class="form-container active">
-        <form method="post">
-            <h1>Inicia sesión</h1>
-            <input type="hidden" name="action" value="iniciar">
-            <div>
-                <input type="email" id="correo" name="correo" required>
-                <label for="correo">Correo</label>
-            </div>
-            <div>
-                <input type="password" id="contraseña" name="contraseña" required>
-                <label for="contraseña">Contraseña</label>
-            </div>
-            <button type="submit">Iniciar</button>
-            <p><a href="{{ url_for('solicitar_recuperacion') }}">¿Olvidaste tu contraseña?</a></p>
-            <p><a href="#" onclick="cambiarFormulario('registrar')">¿No tienes cuenta? Regístrate aquí</a></p>
-        </form>
-    </div>
+<body class=" bg-gray-200" >
 
-    <div id="registrar" class="form-container">
-        <form method="post">
-            <h1>Crea tu cuenta</h1>
-            <input type="hidden" name="action" value="registrar">
-            <div>
-                <input type="text" name="nombre" id="nombre" required>
-                <label for="nombre">Nombre</label>
-            </div>
-            <div>
-                <input type="email" id="correo2" name="correo" required>
-                <label for="correo2">Correo</label>
-            </div>
-            <div>
-                <input type="password" id="contraseña2" name="contraseña" required>
-                <label for="contraseña2">Contraseña</label>
-            </div>
-            <button type="submit">Registrate</button>
-            <p><a href="#" onclick="cambiarFormulario('iniciar')">¿Ya tienes cuenta? Inicia sesión aquí</a></p>
-        </form>
-    </div>
+    <section class="contenedor my-8 shadow-xl">
 
-    {% if mensaje %}
-    <h1>{{ mensaje }}</h1>
-    {% endif %}
+        <div class="overlay__container">
+            <div class="h-79 flex items-center overlay bg-azul__petroleo text-white py-10 px-8 rounded-t-xl">
+
+                <div class="overlay__panel overlay__active" id="registrar__overlay">
+                    <h1 class="text-4xl font-bold text-center">¡Hola!</h1>
+                    <p class="mt-4 text-center">Crea tu cuenta ahora para tener acceso a nuestros servicios</p>
+                    <button class="border-2 mt-8
+                    px-4 py-2 rounded-xl mx-auto block 
+                    transition-all duration-500 
+                    hover:bg-fondo hover:text-negro__suave hover:border-fondo hover:-translate-y-1"
+                    onclick="cambiarFormulario('iniciar')">Iniciar Sesión</button>
+                </div>
+
+                <div class="overlay__panel" id="iniciar__overlay">
+                    <h1 class="text-4xl font-bold text-center">¡Bienvenido de nuevo!</h1>
+                    <p class="mt-4 text-center">Inicia sesion con tu cuenta</p>
+                    <p class="text-center mt-8"><a class="underline hover:no-underline" 
+                        href="{{ url_for('solicitar_recuperacion') }}">
+                            ¿Olvidaste tu contraseña?
+                    </a></p>
+                    <button class="border-2 mt-4
+                    px-4 py-2 rounded-xl mx-auto block 
+                    transition-all duration-500 
+                    hover:bg-fondo hover:text-negro__suave hover:border-fondo hover:-translate-y-1"
+                    , onclick="cambiarFormulario('registrar')">
+                        Registrar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="form__container">
+            <div class="form__slider 
+            h-115.5 flex items-center py-10 px-8 rounded-b-xl bg-fondo">
+
+                <form method="post" id="iniciar" class="form 
+                bg-inherit flex flex-col gap-4">
+                    <h1 class="text-3xl text-center font-semibold mb-8">Inicia sesión</h1>
+                    <input type="hidden" name="action" value="iniciar">
+                    <div class="input__formulario">
+                        <input type="email" id="correo" name="correo" placeholder="" required>
+                        <label for="correo">Correo</label>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="password" id="contraseña" name="contraseña" minlength="8" 
+                        placeholder="" required>
+                        <label for="contraseña">Contraseña</label>
+                        <span></span>
+                    </div>
+                    <button type="submit" class="submit__formulario block
+                    text-white bg-verde__menta w-full">Iniciar</button>
+                </form>
+                <form method="post" id="registrar" class="form login__active
+                bg-inherit flex flex-col gap-4">
+                    <h1 class="text-3xl text-center font-semibold mb-8">Crea tu cuenta</h1>
+                    <input type="hidden" name="action" value="registrar">
+                    <div class="input__formulario">
+                        <input type="text" name="nombre" id="nombre" minlength="4"
+                         placeholder="" required>
+                        <label for="nombre">Nombre</label>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="email" id="correo" name="correo" placeholder="" required>
+                        <label for="correo">Correo</label>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="password" id="contraseña" name="contraseña" minlength="8"
+                        placeholder="" required>
+                        <label for="contraseña">Contraseña</label>
+                        <span></span>
+                    </div>
+                    <button type="submit" class="submit__formulario block
+                    text-white bg-verde__menta w-full">Registrar</button>
+                </form>
+
+            </div>
+        </div>
+
+    </section>
 
     <script>
-        function cambiarFormulario(formulario) {
-            document.getElementById('iniciar').classList.remove('active');
-            document.getElementById('registrar').classList.remove('active');
-            document.getElementById(formulario).classList.add('active');
+        function cambiarFormulario(formulario){
+            document.querySelector('.login__active').classList.remove('login__active')
+            document.querySelector('.overlay__active').classList.remove('overlay__active')
+            setTimeout(() =>{
+                document.getElementById(formulario).classList.add('login__active')
+                const overlay = formulario+'__overlay'
+                document.getElementById(overlay).classList.add('overlay__active')
+            }, 1000)
         }
-
-        // Detectar parámetro inicial
-        /*
-            1. obtiene los parametros enviados
-            2. convierte el string en un objeto que se puede consultar facilmente
-            3. estrae el valor del parametro
-        */
-        const params = new URLSearchParams(window.location.search);
-        const form = params.get('form') || 'iniciar';
-        cambiarFormulario(form);
     </script>
+
 </body>
 </html>
