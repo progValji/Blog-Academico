@@ -1,8 +1,9 @@
 const inputs = document.querySelectorAll('.input__formulario')
 
 inputs.forEach(function(container){
-    const input = container.querySelector('input')  
     const button = container.querySelector('button')
+    if(button == null) return
+    const input = container.querySelector('input')  
     
     button.addEventListener('click', function(e){
         e.preventDefault()

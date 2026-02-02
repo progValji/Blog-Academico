@@ -24,11 +24,9 @@ export function inicializar_validacion_formulario(form){
 
         span.textContent = error
         if(error != ''){
-            console.log('errot')
             span.style.opacity = '1'
             input.style.borderColor = colorErrores
         }else{
-            console.log('bien')
             span.style.opacity = '0'
             input.style.borderColor = 'inherit'
         }
@@ -49,7 +47,7 @@ export function inicializar_validacion_formulario(form){
 
     inputs.forEach(input => {
         input.addEventListener("blur", () => {
-            //validar_input(input);
+            validar_input(input);
             validar_formulario();
         });
     });
