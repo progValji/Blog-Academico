@@ -6,6 +6,10 @@ usar ese email
     app.config['MAIL_DEFAULT_SENDER'] = ('Blog Académico', 'contacto@blogacademico.com')
 ~~~
 
++ Animacion formulario
+El plan original era que en desktop first hubiera una animacion al momento de cambiar entre el formulario
+de inicio y registro
+
 
 # Paleta de Colores
 Opción 2: Moderna y Equilibrada

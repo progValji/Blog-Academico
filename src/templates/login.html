@@ -32,24 +32,26 @@
     </style>
     <title>Inicia Sesión - Blog Academico</title>
 </head>
-<body class=" bg-gray-200" >
+<body class=" bg-gray-200 md:h-screen md:flex md:items-center">
 
-    <section class="contenedor my-8 shadow-xl">
+    <section class="w-[90%] max-w-175 mx-auto my-8 shadow-xl md:my-0 md:flex">
 
-        <div class="overlay__container bg-azul__petroleo text-white rounded-t-xl">
-            <div class="overlay h-79 flex items-center py-10 px-8 relative max-w-xl mx-auto">
+        <div class="overlay__container bg-azul__petroleo text-white
+        md:basis-[50%]">
+            <div class="overlay h-79 flex items-center py-10 px-8 relative max-w-xl mx-auto
+            md:h-full">
 
-                <div class="overlay__panel overlay__active text-center" id="registrar__overlay">
+                <div class="overlay__panel overlay__active text-center relative z-20" id="registrar__overlay">
                     <h1 class="text-5xl font-bold">¡Hola!</h1>
                     <p class="mt-4 text-lg">Crea tu cuenta ahora para tener acceso a nuestros servicios.</p>
-                    <button class="border-2 mt-8
-                    px-4 py-2 rounded-xl mx-auto block 
+                    <button class="border-2 mt-8 rounded-xl
+                    px-4 py-2 mx-auto block 
                     transition-all duration-500 
                     hover:bg-fondo hover:text-negro__suave hover:border-fondo hover:-translate-y-1"
                     onclick="cambiarFormulario('iniciar')">Iniciar Sesión</button>
                 </div>
 
-                <div class="overlay__panel text-center" id="iniciar__overlay">
+                <div class="overlay__panel text-center relative z-20" id="iniciar__overlay">
                     <h1 class="text-4xl font-bold sm:text-5xl">¡Bienvenido de nuevo!</h1>
                     <p class="mt-4 text-lg">Ingresa tus datos para acceder tu cuenta.</p>
                     <p class="mt-8"><a class="underline hover:no-underline" 
@@ -68,7 +70,8 @@
             </div>
         </div>
 
-        <div class="form__container bg-fondo rounded-b-xl">
+        <div class="form__container bg-fondo
+        md:basis-[50%]">
             <div class="form__slider 
             h-115.5 flex items-center py-10 px-8 max-w-xl mx-auto bg-inherit">
 
@@ -89,7 +92,7 @@
                         <button type="button" class="tooglePassword" data-visible="false">👁️</button>
                         <span></span>
                     </div>
-                    <button type="submit" class="submit__formulario block
+                    <button type="submit" disabled class="submit__formulario block
                     text-white bg-verde__menta w-full">Iniciar</button>
                 </form>
                 <form method="post" id="registrar" class="form login__active
@@ -101,6 +104,7 @@
                         <input type="text" name="nombre" id="nombre" minlength="4"
                          placeholder="" required>
                         <label for="nombre">Nombre</label>
+                        <span></span>
                     </div>
                     <div class="input__formulario">
                         <input type="email" id="correo" name="correo" placeholder="" required>
@@ -114,7 +118,7 @@
                         <button type="button" class="tooglePassword" data-visible="false">👁️</button>
                         <span></span>
                     </div>
-                    <button type="submit" class="submit__formulario block
+                    <button type="submit" disabled class="submit__formulario block
                     text-white bg-verde__menta w-full">Registrar</button>
                 </form>
 
@@ -124,11 +128,11 @@
     </section>
 
         <script type="module">
-            import { inicializar_validacion_formulario } from '../static/JS/form__validador.js'
+            import { inicializarValidacionFormulario } from '../static/JS/formValidador.js'
         
             // inicializa el formulario visible al cargar (usa el que tenga .login__active o 'registrar' por defecto)
             const currentForm = document.querySelector('.login__active') || document.getElementById('registrar')
-            inicializar_validacion_formulario(currentForm)
+            inicializarValidacionFormulario(currentForm)
         
             // expone la función para los onclick inline y re-inicializa validación al cambiar
             window.cambiarFormulario = function(formulario){
@@ -140,7 +144,7 @@
                     const overlay = formulario + '__overlay'
                     document.getElementById(overlay).classList.add('overlay__active')
                     // re-inicializa la validación para el formulario ahora activo
-                    inicializar_validacion_formulario(newForm)
+                    inicializarValidacionFormulario(newForm)
                 }, 1000)
             }
     
@@ -152,7 +156,7 @@
             }
         </script>
 
-    <script src="{{ url_for('static', filename='JS/toogle_password.js') }}"></script>
+    <script src="{{ url_for('static', filename='JS/tooglePassword.js') }}"></script>
 
 
 </body>
