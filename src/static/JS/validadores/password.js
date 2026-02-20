@@ -1,9 +1,20 @@
-export function validarPassword(valor){
-    if (!valor.trim()) return "Ingresa una contraseña"
+export function validarPassword(valor) {
+    if (!valor.trim()) return "Ingresa una contraseña";
 
-    const myregex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[^\s]{8,}$/
-    if(!myregex.test(valor)) return 'No es una contraeña valida ❌'
+    if (valor.length < 8)
+        return "Debe tener al menos 8 caracteres";
 
-    return ''
+    if (!/[A-Z]/.test(valor))
+        return "Debe contener al menos una letra mayúscula";
 
+    if (!/[a-z]/.test(valor))
+        return "Debe contener al menos una letra minúscula";
+
+    if (!/\d/.test(valor))
+        return "Debe contener al menos un número";
+
+    if (/\s/.test(valor))
+        return "No debe contener espacios";
+
+    return "";
 }

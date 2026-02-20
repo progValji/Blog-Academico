@@ -6,10 +6,13 @@ import secrets
 from datetime import datetime, timedelta
 from flask_mail import Mail, Message
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 #Constantes de seguridad
 MAX_INTENTOS = 5
-TIEMPO_BLOQUEADO = 2 #MINUTOS
+TIEMPO_BLOQUEADO = 15 #MINUTOS
 TIEMPO_TOKEN = 1 #hora
 RETRASO_BASE = 2 #SEGUNDOS
 
@@ -21,10 +24,12 @@ def generar_token():
     return secrets.token_urlsafe(32)
 
 def obtener_conexion():
-    return pymysql.connect(host='localhost',
-                        user='root',
-                        password='JuanFeliz7',
-                        database='blogacademico')
+    return pymysql.connect(
+        host=os.getenv('DATABASE_HOST'),
+        user=os.getenv('DATABASE_USER'),
+        password=os.getenv('DATABASE_PASSWORD'),
+        database=os.getenv('DATABASE_NAME')
+    )
 
 def enviar_correo(nombre, token, correo):
     mail = Mail(app)
@@ -49,13 +54,15 @@ app = Flask(__name__,
             template_folder=os.path.join('src', 'templates'),
             static_folder='src/static',
             static_url_path='/static')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = "jl3184502@gmail.com"
-app.config['MAIL_PASSWORD'] = "rryy cmpt ylyu dfik"
-app.config['MAIL_DEFAULT_SENDER'] = ('Blog Académico', 'jl3184502@gmail.com')
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
 @app.route('/')
 def index():
@@ -250,6 +257,9 @@ def restablecer_contraseña(token):
 @app.route('/panel_control')
 def panel_control():
     return render_template('panelDeControl.html')
+
+if os.getenv('FLASK_ENV') == 'production':
+    app.config['DEBUG'] = False  # Desactiva modo debug
 
 if __name__ == '__main__':
     app.run(debug=True)

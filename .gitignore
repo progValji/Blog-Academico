@@ -1,3 +1,5 @@
+variables_entorno.env
 notas/
 pruebas.py
 node_modules/
+.venv/

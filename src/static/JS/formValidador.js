@@ -1,5 +1,6 @@
 import { validarEmail } from "./validadores/email.js";
 import { validarPassword } from "./validadores/password.js";
+import { validarNombre } from "./validadores/nombre.js";
 
 export function inicializarValidacionFormulario(form){
     const root = document.documentElement
@@ -24,6 +25,8 @@ export function inicializarValidacionFormulario(form){
             default:
                 if(input.id == "contraseña")
                     error = validarPassword(input.value)
+                if(input.id == "nombre")
+                    error = validarNombre(input.value)
         }
 
         if(touched.has(input)){
