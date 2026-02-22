@@ -68,7 +68,7 @@ def login_requerido(f):
     @wraps(f)
     def  decorated_funcion(*args, **kwargs):
         if 'user_id' not in session:
-            return 'No estas logueado'
+            return render_template('acceso_denegado.html', titulo="Acceso Denegado")
         return f(*args, **kwargs)
     return decorated_funcion
 
@@ -288,7 +288,7 @@ def restablecer_contraseña(token):
 @app.route('/panel_control')
 @login_requerido
 def panel_control():
-    return render_template('panelDeControl.html', user_name = session['user_name'], titulo="Panel Control")
+    return render_template('panel_de_control.html', user_name = session['user_name'], titulo="Panel Control")
 
 @app.route('/cerrar_sesion')
 def cerrar_sesion():
