@@ -94,6 +94,7 @@ def index():
 @app.route('/auth', methods=['GET', 'POST'])
 def login():
     mensaje = None
+    titulo = "Inicia Sesion"
     
     if request.method == 'POST':
         action = request.form.get('action')
@@ -114,7 +115,7 @@ def login():
                     mensaje = 'Usuario o contraseña incorrectas'
                     cursor.close()
                     conexion.close()
-                    return render_template('login.html', mensaje=mensaje)
+                    return render_template('login.html', mensaje=mensaje, titulo=titulo)
                 
                 intentos_fallidos = resultado[5]
                 bloqueado_hasta = resultado[7]
@@ -128,7 +129,7 @@ def login():
                         mensaje = f'Cuenta bloqueada. Intenta en {int(tiempo_restante)} minutos o solicita recuperación de contraseña.'
                         cursor.close()
                         conexion.close()
-                        return render_template('login.html', mensaje=mensaje)
+                        return render_template('login.html', mensaje=mensaje, titulo=titulo)
                     else:
                         # Tiempo de bloqueo expiró: resetear intentos
                         cursor.execute("""
@@ -194,11 +195,12 @@ def login():
         except Exception as e:
             mensaje = f'Error: {str(e)}'
     
-    return render_template('login.html', mensaje=mensaje)
+    return render_template('login.html', mensaje=mensaje, titulo=titulo)
 
 @app.route('/solicitar_recuperacion', methods=['GET', 'POST'])
 def solicitar_recuperacion():
     mensaje = None
+    titulo = "Solicitar Contraseña"
     if request.method == 'POST':
         correo = request.form.get('correo')
 
@@ -222,9 +224,9 @@ def solicitar_recuperacion():
             else: mensaje = 'Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion'
             cursor.close()
             conexion.close()
-            return render_template('solicitar_recuperacion.html', mensaje =mensaje)
-        except Exception as e: return render_template('solicitar_recuperacion.html', mensaje=f'Error: {e}')
-    return render_template('solicitar_recuperacion.html', mensaje = mensaje)
+            return render_template('solicitar_recuperacion.html', mensaje =mensaje, titulo=titulo)
+        except Exception as e: return render_template('solicitar_recuperacion.html', mensaje=f'Error: {e}' )
+    return render_template('solicitar_recuperacion.html', mensaje = mensaje, titulo=titulo)
 
 @app.route('/restablecer_contraseña/<token>', methods=['GET', 'POST'])
 def restablecer_contraseña(token):
@@ -281,12 +283,12 @@ def restablecer_contraseña(token):
     except Exception as e: 
         mensaje = f'Error: {e}'
     
-    return render_template('restablecer_contraseña.html', mensaje=mensaje, token_valido=token_valido)
+    return render_template('restablecer_contraseña.html', mensaje=mensaje, token_valido=token_valido, titulo = "Restablecer Contraseña")
 
 @app.route('/panel_control')
 @login_requerido
 def panel_control():
-    return render_template('panelDeControl.html', user_name = session['user_name'])
+    return render_template('panelDeControl.html', user_name = session['user_name'], titulo="Panel Control")
 
 @app.route('/cerrar_sesion')
 def cerrar_sesion():

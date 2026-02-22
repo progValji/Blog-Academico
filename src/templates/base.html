@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/output.css') }}">
     <title>Blog Academico - {{ titulo }}</title>
 </head>
 <body>
@@ -10,7 +11,7 @@
         <h1>Blog Academico</h1>
         <nav>
             <ul>
-                <li><a href="#">Incio</a>
+                <li><a href="{{ url_for('index') }}">Inicio</a>
                     <a href="{{ url_for('login') }}?form=iniciar">Iniciar Sesion</a>
                     <a href="{{ url_for('login') }}?form=registrar">Registrate</a>
                 </li>

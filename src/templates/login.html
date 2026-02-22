@@ -1,38 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/output.css') }}">
-    <style>
-        #iniciar__form{display: none;}
+<style>
+    #iniciar__form{display: none;}
 
-        .form__container{display: block; position: relative;}
+    .form__container{display: block; position: relative;}
 
-        .form, .overlay__panel {
-            position: absolute;
-            width: 100%;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            transform: translateY(40px) scale(.9);
-            transition: 
-                opacity 1s ease,
-                transform 1s ease;
-            pointer-events: none;
-        }
+    .form, .overlay__panel {
+        position: absolute;
+        width: 100%;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        transform: translateY(40px) scale(.9);
+        transition: 
+            opacity 1s ease,
+            transform 1s ease;
+        pointer-events: none;
+    }
 
-        .login__active, .overlay__active{
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-            position: relative;
-        }
+    .login__active, .overlay__active{
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+        position: relative;
+    }
+</style>
+{% extends "base.html" %}
 
-    </style>
-    <title>Inicia Sesión - Blog Academico</title>
-</head>
-<body class=" bg-gray-200 md:h-screen md:flex md:items-center">
+{% block contenido %}
+<section class=" bg-gray-200 md:h-screen md:flex md:items-center">
 
     <section class="w-[90%] max-w-175 mx-auto my-8 shadow-xl md:my-0 md:flex">
 
@@ -158,6 +152,5 @@
 
     <script src="{{ url_for('static', filename='JS/tooglePassword.js') }}"></script>
 
-
-</body>
-</html>
+</section>
+{% endblock %}
