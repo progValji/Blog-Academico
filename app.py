@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 import time
@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from flask_mail import Mail, Message
 import os
 from dotenv import load_dotenv
+from functools import wraps
 
 load_dotenv()
 
@@ -54,7 +55,6 @@ app = Flask(__name__,
             template_folder=os.path.join('src', 'templates'),
             static_folder='src/static',
             static_url_path='/static')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
@@ -63,6 +63,14 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+def login_requerido(f):
+    @wraps(f)
+    def  decorated_funcion(*args, **kwargs):
+        if 'user_id' not in session:
+            return 'No estas logueado'
+        return f(*args, **kwargs)
+    return decorated_funcion
 
 @app.route('/')
 def index():
@@ -128,6 +136,8 @@ def login():
                     SET intentos_fallidos = 0, ultimo_intento = NULL, bloqueado_hasta=NULL
                     WHERE id = %s
                     """, (resultado[0])) #tal vez ultimo intento deberia guardar la fechaYhora
+                    session['user_id'] = resultado[0]
+                    session['user_name'] = resultado[1]
                     conexion.commit()
                     cursor.close()
                     conexion.close()
@@ -157,6 +167,10 @@ def login():
                                     VALUES (%s, %s, %s)
                                    """, (nombre, correo, contraseña_hash))
                     conexion.commit()
+                    session['user_id'] = cursor.lastrowid
+                    session['user_name'] = nombre
+                    cursor.close()
+                    conexion.close()
                     return redirect(url_for('panel_control'))
             
             cursor.close()
@@ -255,8 +269,14 @@ def restablecer_contraseña(token):
     return render_template('restablecer_contraseña.html', mensaje=mensaje, token_valido=token_valido)
 
 @app.route('/panel_control')
+@login_requerido
 def panel_control():
-    return render_template('panelDeControl.html')
+    return render_template('panelDeControl.html', user_name = session['user_name'])
+
+@app.route('/cerrar_sesion')
+def cerrar_sesion():
+    session.pop('user_id', None)
+    return redirect(url_for('index'))
 
 if os.getenv('FLASK_ENV') == 'production':
     app.config['DEBUG'] = False  # Desactiva modo debug
