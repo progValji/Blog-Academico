@@ -74,7 +74,22 @@ def login_requerido(f):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # obtener últimos 10 posts desde la base de datos
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("""
+            SELECT *
+            FROM posts
+            ORDER BY created_at DESC
+            LIMIT 10
+        """)
+        posts = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+    except Exception as e:
+        posts = []
+    return render_template('index.html', posts=posts, user_id=session.get('user_id'), user_name=session.get('user_name'), titulo="Inicio")
 
 @app.route('/auth', methods=['GET', 'POST'])
 def login():
