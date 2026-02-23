@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 import time
@@ -55,6 +55,29 @@ app = Flask(__name__,
             template_folder=os.path.join('src', 'templates'),
             static_folder='src/static',
             static_url_path='/static')
+
+@app.template_filter('tiempo_relativo')
+def tiempo_relativo(fecha):
+    ahora = datetime.now()
+    diferencia = ahora - fecha
+
+    segundos = diferencia.total_seconds()
+
+    if segundos < 60:
+        return f"{int(segundos)} segundos"
+    
+    minutos = segundos / 60
+    if minutos < 60:
+        return f"{int(minutos)} minutos"
+    
+    horas = minutos / 60
+    if horas < 24:
+        return f"{int(horas)} horas"
+    
+    if fecha.year == ahora.year:
+        return fecha.strftime("%d %b") 
+    else:
+        return fecha.strftime("%d %b %Y") 
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
@@ -294,6 +317,42 @@ def panel_control():
 def cerrar_sesion():
     session.pop('user_id', None)
     return redirect(url_for('index'))
+
+@app.route('/crear_post', methods=['GET', 'POST'])
+@login_requerido
+def crear_post():
+    if request.method == 'POST':
+        titulo = request.form.get('titulo', '').strip()
+        contenido = request.form.get('contenido')
+        #files = request.files.getlist('adjuntos') 'adjuntos' coincide con el name del input HTML
+
+        if not titulo or not contenido:
+            flash('El titulo y el contenido no pueden estar vacios.', 'error')
+            return redirect(request.url) #se recarga la pagina mostrando el error
+
+        try:
+            conexion = obtener_conexion()
+            cursor = conexion.cursor()
+            sql = """
+                INSERT INTO posts (user_id, titulo, contenido, created_at)
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
+                session['user_id'],
+                titulo,
+                contenido,
+                datetime.now()
+            ))
+            conexion.commit()
+            flash('¡Tu post ha sido publicado exitosamente!','succes')
+            
+        except Exception as e:
+            flash('Ocurrió un error al guardar el post. Inténtalo de nuevo.', 'error')
+        finally:
+            if cursor: cursor.close()
+            if conexion: conexion.close()
+        return redirect(url_for('index'))
+    return render_template("crear_post.html", titulo="Crea Un Post")
 
 if os.getenv('FLASK_ENV') == 'production':
     app.config['DEBUG'] = False  # Desactiva modo debug

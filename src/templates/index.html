@@ -7,7 +7,7 @@
             {% for post in posts %}
                 <li>
                     <h2>{{ post.titulo }}</h2>
-                    <small>{{ post.created_at }}</small>
+                    <small>{{ post.created_at |  tiempo_relativo }}</small>
                     <p>{{ post.contenido }}</p>
                 </li>
             {% endfor %}
@@ -15,7 +15,7 @@
     {% else %}
             <!-- Si no hay posts, dos caminos según sesión -->
             {% if user_id %}
-                <p>No hay posts todavía. <a href="{{ url_for('panel_control') }}">Sé el primero en comentar</a>.</p>
+                <p>No hay posts todavía. <a href="{{ url_for('crear_post') }}">Sé el primero en comentar</a>.</p>
             {% else %}
                 <p>No hay posts todavía. <a href="{{ url_for('login') }}?form=registrar">Regístrate</a> para crear el primero.</p>
             {% endif %}
