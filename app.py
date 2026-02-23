@@ -8,6 +8,7 @@ from flask_mail import Mail, Message
 import os
 from dotenv import load_dotenv
 from functools import wraps
+import bleach
 
 load_dotenv()
 
@@ -102,9 +103,10 @@ def index():
         conexion = obtener_conexion()
         cursor = conexion.cursor(pymysql.cursors.DictCursor)
         cursor.execute("""
-            SELECT *
-            FROM posts
-            ORDER BY created_at DESC
+            SELECT p.*, IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre
+            FROM posts p
+            LEFT JOIN usuarios u ON p.user_id = u.id
+            ORDER BY p.created_at DESC
             LIMIT 10
         """)
         posts = cursor.fetchall()
@@ -328,11 +330,32 @@ def crear_post():
 
         if not titulo or not contenido:
             flash('El titulo y el contenido no pueden estar vacios.', 'error')
-            return redirect(request.url) #se recarga la pagina mostrando el error
+            return redirect(request.url)
 
         try:
             conexion = obtener_conexion()
             cursor = conexion.cursor()
+
+            allowed_tags = ['b', 'i', 'u', 'p', 'br', 'a']
+            allowed_attributes = {
+                'a': ['href', 'title', 'rel', 'target']
+            }
+
+            contenido_limpio = bleach.clean(
+                contenido,
+                tags=allowed_tags,
+                attributes=allowed_attributes,
+                protocols=['http', 'https'],
+                strip=True
+            )
+
+            def set_target_blank(attrs, new=False):
+                attrs[(None, "target")] = "_blank"
+                attrs[(None, "rel")] = "noopener noreferrer"
+                return attrs
+            
+            resultado = bleach.linkify(contenido_limpio, callbacks=[set_target_blank])
+
             sql = """
                 INSERT INTO posts (user_id, titulo, contenido, created_at)
                 VALUES (%s, %s, %s, %s)
@@ -340,17 +363,19 @@ def crear_post():
             cursor.execute(sql, (
                 session['user_id'],
                 titulo,
-                contenido,
+                resultado,
                 datetime.now()
             ))
             conexion.commit()
-            flash('¡Tu post ha sido publicado exitosamente!','succes')
+            flash('¡Tu post ha sido publicado exitosamente!','success')
             
         except Exception as e:
             flash('Ocurrió un error al guardar el post. Inténtalo de nuevo.', 'error')
         finally:
-            if cursor: cursor.close()
-            if conexion: conexion.close()
+            if 'cursor' in locals() and cursor:
+                cursor.close()
+            if 'conexion' in locals() and conexion:
+                conexion.close()
         return redirect(url_for('index'))
     return render_template("crear_post.html", titulo="Crea Un Post")
 

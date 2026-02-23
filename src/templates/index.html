@@ -2,13 +2,27 @@
 
 {% block contenido %}
 
+    <section>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    </section>
+
+    <section>
     {% if posts %}
         <ul>
             {% for post in posts %}
                 <li>
                     <h2>{{ post.titulo }}</h2>
                     <small>{{ post.created_at |  tiempo_relativo }}</small>
-                    <p>{{ post.contenido }}</p>
+                    <small>{{ post.autor_nombre }}</small>
+                    <p>{{ post.contenido | safe }}</p>
                 </li>
             {% endfor %}
         </ul>
@@ -20,5 +34,10 @@
                 <p>No hay posts todavía. <a href="{{ url_for('login') }}?form=registrar">Regístrate</a> para crear el primero.</p>
             {% endif %}
     {% endif %}
+    </section>
+
+    <div>
+        <a href="{{ url_for('crear_post') }}">Crea un post</a>
+    </div>
 
 {% endblock %}
