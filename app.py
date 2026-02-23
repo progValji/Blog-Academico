@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import pymysql
 import time
 import secrets
@@ -9,6 +10,7 @@ import os
 from dotenv import load_dotenv
 from functools import wraps
 import bleach
+import uuid
 
 load_dotenv()
 
@@ -17,6 +19,10 @@ MAX_INTENTOS = 5
 TIEMPO_BLOQUEADO = 15 #MINUTOS
 TIEMPO_TOKEN = 1 #hora
 RETRASO_BASE = 2 #SEGUNDOS
+
+# Configuración de subida de archivos
+UPLOAD_FOLDER = 'src/static/uploads/posts'
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'xlsx', 'pptx'}
 
 def calcular_retraso_exponencial(intenos_fallidos):
     if intenos_fallidos == 0: return 0
@@ -50,6 +56,10 @@ def enviar_correo(nombre, token, correo):
         """
     )
     mail.send(msg)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 app = Flask(__name__, 
@@ -87,6 +97,11 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Límite de 16MB por seguridad
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def login_requerido(f):
     @wraps(f)
@@ -326,7 +341,7 @@ def crear_post():
     if request.method == 'POST':
         titulo = request.form.get('titulo', '').strip()
         contenido = request.form.get('contenido')
-        #files = request.files.getlist('adjuntos') 'adjuntos' coincide con el name del input HTML
+        files = request.files.getlist('adjuntos')
 
         if not titulo or not contenido:
             flash('El titulo y el contenido no pueden estar vacios.', 'error')
@@ -356,6 +371,21 @@ def crear_post():
             
             resultado = bleach.linkify(contenido_limpio, callbacks=[set_target_blank])
 
+            saved_files = []
+            for file in files:
+                if file and file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    extension = filename.rsplit('.', 1)[1].lower()
+                    unique_name = f"{uuid.uuid4()}.{extension}"
+
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+                    file.save(filepath)
+
+                    relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
+                    saved_files.append((relative_path, file.mimetype or extension))
+                elif file and file.filename != '':
+                    flash(f'El archivo {file.filename} no tiene un formato permitido.', 'warning')
+
             sql = """
                 INSERT INTO posts (user_id, titulo, contenido, created_at)
                 VALUES (%s, %s, %s, %s)
@@ -367,6 +397,16 @@ def crear_post():
                 datetime.now()
             ))
             conexion.commit()
+
+            post_id = cursor.lastrowid
+            if saved_files:
+                media_sql = """
+                    INSERT INTO post_media (post_id, file_url, file_type)
+                    VALUES (%s, %s, %s)
+                """
+                media_params = [(post_id, path, ftype) for path, ftype in saved_files]
+                cursor.executemany(media_sql, media_params)
+                conexion.commit()
             flash('¡Tu post ha sido publicado exitosamente!','success')
             
         except Exception as e:

@@ -2,6 +2,18 @@
 
 {% block contenido %}
 
+    <section>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    </section>
+
     <h1>Crear nuevo Post</h1>
     
     <form method="post" enctype="multipart/form-data">
@@ -15,12 +27,12 @@
             <textarea id="contenido" name="contenido" required></textarea>
         </div>
 
-        <!-- <div>
+        <div>
             <label for="adjuntos">Adjuntar archivos</label>
             <input id="adjuntos" name="adjuntos" type="file" multiple>
         </div>
 
-        <div id="filesPreview" class="files-list" aria-live="polite"></div> -->
+        <div id="filesPreview" class="files-list" aria-live="polite"></div>
 
         <div class="actions">
             <button type="submit">Publicar</button>
