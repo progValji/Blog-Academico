@@ -113,14 +113,22 @@ def login_requerido(f):
 
 @app.route('/')
 def index():
-    # obtener últimos 10 posts desde la base de datos
     try:
         conexion = obtener_conexion()
         cursor = conexion.cursor(pymysql.cursors.DictCursor)
         cursor.execute("""
-            SELECT p.*, IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre
+            SELECT 
+                p.*,
+                IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
+                GROUP_CONCAT(
+                    CONCAT(pm.file_url, '|', pm.nombre_original)
+                ) AS pdf_data
             FROM posts p
             LEFT JOIN usuarios u ON p.user_id = u.id
+            LEFT JOIN post_media pm 
+                ON p.id = pm.post_id 
+                AND pm.file_type = 'application/pdf'
+            GROUP BY p.id
             ORDER BY p.created_at DESC
             LIMIT 10
         """)
@@ -382,7 +390,7 @@ def crear_post():
                     file.save(filepath)
 
                     relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
-                    saved_files.append((relative_path, file.mimetype or extension))
+                    saved_files.append((relative_path, file.mimetype or extension, filename))
                 elif file and file.filename != '':
                     flash(f'El archivo {file.filename} no tiene un formato permitido.', 'warning')
 
@@ -401,10 +409,10 @@ def crear_post():
             post_id = cursor.lastrowid
             if saved_files:
                 media_sql = """
-                    INSERT INTO post_media (post_id, file_url, file_type)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO post_media (post_id, file_url, file_type, nombre_original)
+                    VALUES (%s, %s, %s, %s)
                 """
-                media_params = [(post_id, path, ftype) for path, ftype in saved_files]
+                media_params = [(post_id, path, ftype, nombre_original) for path, ftype, nombre_original in saved_files]
                 cursor.executemany(media_sql, media_params)
                 conexion.commit()
             flash('¡Tu post ha sido publicado exitosamente!','success')
