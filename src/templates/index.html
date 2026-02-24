@@ -18,29 +18,24 @@
     {% if posts %}
         <ul>
             {% for post in posts %}
-                <li>
-                    <h2>{{ post.titulo }}</h2>
-                    <small>{{ post.created_at |  tiempo_relativo }}</small>
+                <div class="post">
+                    <h3>{{ post.titulo }}</h3>
+                    <small>{{ post.created_at | tiempo_relativo }}</small>
                     <small>{{ post.autor_nombre }}</small>
                     <p>{{ post.contenido | safe }}</p>
 
-                    {% if post.pdf_data %}
-                        {% set archivos = post.pdf_data.split(',') %}
-                        <div>
-                            <strong>Archivos PDF:</strong><br>
-
-                            {% for archivo in archivos %}
-                                {% set partes = archivo.split('|') %}
-                                {% set ruta = partes[0] %}
-                                {% set nombre = partes[1] %}
-
-                                <a href="{{ url_for('static', filename=ruta) }}" target="_blank">
-                                    📄 {{ nombre }}
-                                </a><br>
-                            {% endfor %}
-                        </div>
+                {% for media in post.archivos %}
+                    {% if media.tipo_archivo == 'application/pdf' %}
+                        <a href="{{ url_for('static', filename=media.ruta_archivo) }}" target="_blank">
+                            📄 {{ media.nombre_original }}
+                        </a><br>
+                    {% elif media.tipo_archivo == 'text/plain' %}
+                        <a href="{{ url_for('ver_texto', media_id=media.id) }}">
+                            📝 {{ media.nombre_original }}
+                        </a><br>
                     {% endif %}
-                </li>
+                {% endfor %}
+                </div>
             {% endfor %}
         </ul>
     {% else %}

@@ -116,28 +116,60 @@ def index():
     try:
         conexion = obtener_conexion()
         cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
         cursor.execute("""
             SELECT 
                 p.*,
                 IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
-                GROUP_CONCAT(
-                    CONCAT(pm.file_url, '|', pm.nombre_original)
-                ) AS pdf_data
+                pm.id AS media_id,
+                pm.file_url,
+                pm.nombre_original,
+                pm.file_type
             FROM posts p
             LEFT JOIN usuarios u ON p.user_id = u.id
-            LEFT JOIN post_media pm 
-                ON p.id = pm.post_id 
-                AND pm.file_type = 'application/pdf'
-            GROUP BY p.id
+            LEFT JOIN post_media pm ON p.id = pm.post_id
             ORDER BY p.created_at DESC
             LIMIT 10
         """)
-        posts = cursor.fetchall()
+
+        resultados = cursor.fetchall()
+
         cursor.close()
         conexion.close()
+
+        posts_dict = {}
+
+        for fila in resultados:
+            post_id = fila['id']
+
+            if post_id not in posts_dict:
+                posts_dict[post_id] = {
+                    'id': fila['id'],
+                    'titulo': fila['titulo'],
+                    'contenido': fila['contenido'],
+                    'autor_nombre': fila['autor_nombre'],
+                    'created_at': fila['created_at'],
+                    'archivos': []
+                }
+
+            if fila['media_id']:
+                posts_dict[post_id]['archivos'].append({
+                    'id': fila['media_id'],
+                    'ruta_archivo': fila['file_url'],
+                    'nombre_original': fila['nombre_original'],
+                    'tipo_archivo': fila['file_type']
+                })
+
+        posts = list(posts_dict.values())
     except Exception as e:
         posts = []
-    return render_template('index.html', posts=posts, user_id=session.get('user_id'), user_name=session.get('user_name'), titulo="Inicio")
+    return render_template(
+        'index.html',
+        posts=posts,
+        user_id=session.get('user_id'),
+        user_name=session.get('user_name'),
+        titulo="Inicio"
+    )
 
 @app.route('/auth', methods=['GET', 'POST'])
 def login():
@@ -390,6 +422,7 @@ def crear_post():
                     file.save(filepath)
 
                     relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
+                    print(file.mimetype or extension)
                     saved_files.append((relative_path, file.mimetype or extension, filename))
                 elif file and file.filename != '':
                     flash(f'El archivo {file.filename} no tiene un formato permitido.', 'warning')
@@ -426,6 +459,33 @@ def crear_post():
                 conexion.close()
         return redirect(url_for('index'))
     return render_template("crear_post.html", titulo="Crea Un Post")
+
+@app.route('/ver_texto/<int:media_id>')
+def ver_texto(media_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute("""
+        SELECT file_url, nombre_original
+        FROM post_media
+        WHERE id = %s AND file_type = 'text/plain'
+    """, (media_id,))
+
+    archivo = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+
+    if archivo:
+        with open(f"src/static/{archivo['file_url']}", "r", encoding="utf-8") as f:
+            contenido = f.read()
+
+        return render_template(
+            "ver_texto.html",
+            contenido=contenido,
+            nombre=archivo['nombre_original']
+        )
+
+    return "Archivo no encontrado"
 
 if os.getenv('FLASK_ENV') == 'production':
     app.config['DEBUG'] = False  # Desactiva modo debug

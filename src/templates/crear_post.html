@@ -19,7 +19,7 @@
     <form method="post" enctype="multipart/form-data">
         <div>
             <label for="titulo">Título</label>
-            <input id="titulo" name="titulo" type="text" required autocomplete="off" accept=".pdf">
+            <input id="titulo" name="titulo" type="text" required autocomplete="off">
         </div>
 
         <div>
@@ -29,7 +29,7 @@
 
         <div>
             <label for="adjuntos">Adjuntar archivos</label>
-            <input id="adjuntos" name="adjuntos" type="file" multiple>
+            <input id="adjuntos" name="adjuntos" type="file" accept=".pdf, .txt" multiple>
         </div>
 
         <div id="filesPreview" class="files-list" aria-live="polite"></div>
