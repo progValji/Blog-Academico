@@ -25,7 +25,8 @@
             {% for comentario in comentarios %}
             <li class="comentario-item">
                 <strong>{{ comentario.autor }}</strong> dice:
-                <p>{{ comentario.texto }}</p>
+                <p>{{ comentario.created_at | tiempo_relativo}}</p>
+                <p>{{ comentario.contenido | safe }}</p>
             </li>
             {% else %}
                 <p>Sé el primero en comentar.</p>
@@ -34,17 +35,17 @@
         <div>
             <h3>Deja un comentario</h3>
             <form action="{{ url_for('agregar_comentario', post_id=post.id) }}" method="post">
-                <div class="form-group">
-                    <label for="autor">Nombre:</label>
-                    <input type="text" name="autor" required class="form-control">
-                </div>
-            
+                {% if session.get('user_id') %}
                 <div class="form-group">
                     <label for="texto">Comentario:</label>
                     <textarea name="texto" rows="4" required class="form-control"></textarea>
                 </div>
-            
                 <button type="submit" class="btn">Enviar Comentario</button>
+                {% else %}
+                <div>
+                    <p>Para hacer un comentario, debes estar tener una cuenta</p>
+                </div>
+                {% endif %}
             </form>
         </div>
     </section>

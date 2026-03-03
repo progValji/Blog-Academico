@@ -1,19 +1,6 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-
-    <section>
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        <ul class="flashes">
-          {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-    </section>
-
     <section>
     {% if posts %}
         <ul>
@@ -36,7 +23,12 @@
                         {% endif %}
                     {% endfor %}
                         
-                    <a href="{{ url_for('visualizar_post', post_id=post.id) }}">Comentarios
+                    <a href="{{ url_for('visualizar_post', post_id=post.id) }}">
+                        {% if post.total_comentarios == 0 %}
+                            Se el primero en comentar
+                        {% else %}
+                            {{ post.total_comentarios }} Comentarios
+                        {% endif %}
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
                         stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-messages">

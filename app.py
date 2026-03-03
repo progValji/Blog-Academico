@@ -61,6 +61,27 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def limpiar_contenido(contenido):
+    allowed_tags = ['b', 'i', 'u', 'p', 'br', 'a']
+    allowed_attributes = {
+        'a': ['href', 'title', 'rel', 'target']
+    }
+
+    contenido_limpio = bleach.clean(
+        contenido,
+        tags=allowed_tags,
+        attributes=allowed_attributes,
+        protocols=['http', 'https'],
+        strip=True
+    )
+
+    def set_target_blank(attrs, new=False):
+        attrs[(None, "target")] = "_blank"
+        attrs[(None, "rel")] = "noopener noreferrer"
+        return attrs
+            
+    resultado = bleach.linkify(contenido_limpio, callbacks=[set_target_blank])
+    return resultado
 
 app = Flask(__name__, 
             template_folder=os.path.join('src', 'templates'),
@@ -118,18 +139,23 @@ def index():
         cursor = conexion.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute("""
-            SELECT 
-                p.*,
-                IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
-                pm.id AS media_id,
-                pm.file_url,
-                pm.nombre_original,
-                pm.file_type
-            FROM posts p
-            LEFT JOIN usuarios u ON p.user_id = u.id
-            LEFT JOIN post_media pm ON p.id = pm.post_id
-            ORDER BY p.created_at DESC
-            LIMIT 10
+        SELECT 
+        p.*,
+        IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
+        pm.id AS media_id,
+        pm.file_url,
+        pm.nombre_original,
+        pm.file_type,
+        (
+            SELECT COUNT(*) 
+            FROM comentarios c 
+            WHERE c.post_id = p.id
+        ) AS total_comentarios
+        FROM posts p
+        LEFT JOIN usuarios u ON p.user_id = u.id
+        LEFT JOIN post_media pm ON p.id = pm.post_id
+        ORDER BY p.created_at DESC
+        LIMIT 10;
         """)
 
         resultados = cursor.fetchall()
@@ -148,6 +174,7 @@ def index():
                     'titulo': fila['titulo'],
                     'contenido': fila['contenido'],
                     'autor_nombre': fila['autor_nombre'],
+                    'total_comentarios': fila['total_comentarios'],
                     'created_at': fila['created_at'],
                     'archivos': []
                 }
@@ -391,25 +418,7 @@ def crear_post():
             conexion = obtener_conexion()
             cursor = conexion.cursor()
 
-            allowed_tags = ['b', 'i', 'u', 'p', 'br', 'a']
-            allowed_attributes = {
-                'a': ['href', 'title', 'rel', 'target']
-            }
-
-            contenido_limpio = bleach.clean(
-                contenido,
-                tags=allowed_tags,
-                attributes=allowed_attributes,
-                protocols=['http', 'https'],
-                strip=True
-            )
-
-            def set_target_blank(attrs, new=False):
-                attrs[(None, "target")] = "_blank"
-                attrs[(None, "rel")] = "noopener noreferrer"
-                return attrs
-            
-            resultado = bleach.linkify(contenido_limpio, callbacks=[set_target_blank])
+            resultado = limpiar_contenido(contenido)
 
             saved_files = []
             for file in files:
@@ -482,10 +491,9 @@ def visualizar_post(post_id):
 
         resultados = cursor.fetchall()
 
-        cursor.close()
-        conexion.close()
-
         if not resultados:
+            cursor.close()
+            conexion.close()
             abort(404)
 
         post = {
@@ -506,6 +514,18 @@ def visualizar_post(post_id):
                     'tipo_archivo': fila['file_type']
                 })
 
+        cursor.execute("""
+        SELECT u.nombre_usuario AS autor, c.contenido, c.created_at
+        FROM comentarios c
+        INNER JOIN usuarios u ON c.user_id = u.id
+        WHERE c.post_id = %s
+        ORDER BY c.created_at ASC;
+        """, (post_id,))
+        comentarios = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
     except Exception as e:
         print("Error:", e)
         abort(500)
@@ -514,12 +534,36 @@ def visualizar_post(post_id):
         'visualizar_post.html',
         titulo="Detalles Post",
         post=post,
+        comentarios=comentarios,
+        user_id=session.get('user_id')
         
     )
 
-@app.route('/agregar_comentario/<int:post_id>')
+@app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
 def agregar_comentario(post_id):
-    return 'hola'
+    user_id = session.get('user_id')
+    texto = request.form.get('texto', '').strip()
+
+    if not texto:
+        flash('El comentario no puede estar vacío.', 'error')
+        return redirect(url_for('visualizar_post', post_id=post_id))
+
+    texto_limpio = limpiar_contenido(texto)
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+        cursor.execute("""
+            INSERT INTO comentarios (post_id, user_id, contenido, created_at)
+            VALUES (%s, %s, %s, %s)
+        """, (post_id, user_id, texto_limpio, datetime.now()))
+        conexion.commit()
+    except Exception as e:
+        flash('Ocurrió un error al agregar el comentario.', 'error')
+    finally:
+        cursor.close()
+        conexion.close()
+
+    return redirect(url_for('visualizar_post', post_id=post_id))
 
 @app.route('/ver_texto/<int:media_id>')
 def ver_texto(media_id):

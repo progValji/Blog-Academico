@@ -10,6 +10,9 @@ usar ese email
 El plan original era que en desktop first hubiera una animacion al momento de cambiar entre el formulario
 de inicio y registro
 
++ Comentarios
+Permitir que usuarios no registrados puedan comentar, esos comenatios iran a la parte de administrar 
+comentarios, en el cual los usuaios registrados podran admitirlos, pedirles cambios o rechazarlos
 
 # Paleta de Colores
 Opción 2: Moderna y Equilibrada
