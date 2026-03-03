@@ -20,6 +20,9 @@ TIEMPO_BLOQUEADO = 15 #MINUTOS
 TIEMPO_TOKEN = 1 #hora
 RETRASO_BASE = 2 #SEGUNDOS
 
+#Constantes Normales
+POSTS_POR_PAGINA = 10
+
 # Configuración de subida de archivos
 UPLOAD_FOLDER = 'src/static/uploads/posts'
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'xlsx', 'pptx'}
@@ -134,6 +137,9 @@ def login_requerido(f):
 
 @app.route('/')
 def index():
+    pagina = request.args.get('pagina', 1, type=int)
+    offset = (pagina - 1) * POSTS_POR_PAGINA
+    total_paginas = 0
     try:
         conexion = obtener_conexion()
         cursor = conexion.cursor(pymysql.cursors.DictCursor)
@@ -155,13 +161,10 @@ def index():
         LEFT JOIN usuarios u ON p.user_id = u.id
         LEFT JOIN post_media pm ON p.id = pm.post_id
         ORDER BY p.created_at DESC
-        LIMIT 10;
-        """)
+        LIMIT %s OFFSET %s;
+        """, (POSTS_POR_PAGINA, offset))
 
         resultados = cursor.fetchall()
-
-        cursor.close()
-        conexion.close()
 
         posts_dict = {}
 
@@ -188,14 +191,24 @@ def index():
                 })
 
         posts = list(posts_dict.values())
+
+        cursor.execute("SELECT COUNT(*) as total FROM posts")
+        total_posts = cursor.fetchone()['total']
+        total_paginas = (total_posts + POSTS_POR_PAGINA - 1) // POSTS_POR_PAGINA
+
     except Exception as e:
         posts = []
+    finally:
+        cursor.close()
+        conexion.close()
     return render_template(
         'index.html',
         posts=posts,
         user_id=session.get('user_id'),
         user_name=session.get('user_name'),
-        titulo="Inicio"
+        titulo="Inicio",
+        pagina=pagina,
+        total_paginas=total_paginas
     )
 
 @app.route('/auth', methods=['GET', 'POST'])

@@ -39,6 +39,15 @@
                 </article>
             {% endfor %}
         </ul>
+        <div>
+        {% for num in range(1, total_paginas + 1) %}
+            {% if num == pagina %}
+                <strong>{{ num }}</strong>
+            {% else %}
+                <a href="{{ url_for('index', pagina=num) }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        </div>
     {% else %}
             {% if user_id %}
                 <p>No hay posts todavía. <a href="{{ url_for('crear_post') }}">Sé el primero en comentar</a>.</p>
