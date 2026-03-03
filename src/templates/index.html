@@ -18,24 +18,33 @@
     {% if posts %}
         <ul>
             {% for post in posts %}
-                <div class="post">
+                <article class="post">
                     <h3>{{ post.titulo }}</h3>
                     <small>{{ post.created_at | tiempo_relativo }}</small>
                     <small>{{ post.autor_nombre }}</small>
-                    <p>{{ post.contenido | safe }}</p>
+                    <p>{{ post.contenido[:10] }}...</p>
 
-                {% for media in post.archivos %}
-                    {% if media.tipo_archivo == 'application/pdf' %}
-                        <a href="{{ url_for('static', filename=media.ruta_archivo) }}" target="_blank">
-                            📄 {{ media.nombre_original }}
-                        </a><br>
-                    {% elif media.tipo_archivo == 'text/plain' %}
-                        <a href="{{ url_for('ver_texto', media_id=media.id) }}">
-                            📝 {{ media.nombre_original }}
-                        </a><br>
-                    {% endif %}
-                {% endfor %}
-                </div>
+                    {% for media in post.archivos %}
+                        {% if media.tipo_archivo == 'application/pdf' %}
+                            <a href="{{ url_for('static', filename=media.ruta_archivo) }}" target="_blank">
+                                📄 {{ media.nombre_original }}
+                            </a><br>
+                        {% elif media.tipo_archivo == 'text/plain' %}
+                            <a href="{{ url_for('ver_texto', media_id=media.id) }}" target="_blank">
+                                📝 {{ media.nombre_original }}
+                            </a><br>
+                        {% endif %}
+                    {% endfor %}
+                        
+                    <a href="{{ url_for('visualizar_post', post_id=post.id) }}">Comentarios
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                        stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-messages">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
+                        <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" /></svg>
+                    </a>
+
+                </article>
             {% endfor %}
         </ul>
     {% else %}

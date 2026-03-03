@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import pymysql
@@ -459,6 +459,67 @@ def crear_post():
                 conexion.close()
         return redirect(url_for('index'))
     return render_template("crear_post.html", titulo="Crea Un Post")
+
+@app.route('/visualizar_post/<int:post_id>')
+def visualizar_post(post_id):
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("""
+            SELECT 
+                p.*,
+                IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
+                pm.id AS media_id,
+                pm.file_url,
+                pm.nombre_original,
+                pm.file_type
+            FROM posts p
+            LEFT JOIN usuarios u ON p.user_id = u.id
+            LEFT JOIN post_media pm ON p.id = pm.post_id
+            WHERE p.id = %s
+        """, (post_id,))
+
+        resultados = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        if not resultados:
+            abort(404)
+
+        post = {
+            'id': resultados[0]['id'],
+            'titulo': resultados[0]['titulo'],
+            'contenido': resultados[0]['contenido'],
+            'autor_nombre': resultados[0]['autor_nombre'],
+            'created_at': resultados[0]['created_at'],
+            'archivos': []
+        }
+
+        for fila in resultados:
+            if fila['media_id'] is not None:
+                post['archivos'].append({
+                    'id': fila['media_id'],
+                    'ruta_archivo': fila['file_url'],
+                    'nombre_original': fila['nombre_original'],
+                    'tipo_archivo': fila['file_type']
+                })
+
+    except Exception as e:
+        print("Error:", e)
+        abort(500)
+
+    return render_template(
+        'visualizar_post.html',
+        titulo="Detalles Post",
+        post=post,
+        
+    )
+
+@app.route('/agregar_comentario/<int:post_id>')
+def agregar_comentario(post_id):
+    return 'hola'
 
 @app.route('/ver_texto/<int:media_id>')
 def ver_texto(media_id):

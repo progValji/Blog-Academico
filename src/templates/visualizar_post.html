@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+    <article>
+        <h3>{{ post.titulo }}</h3>
+        <small>{{ post.created_at | tiempo_relativo }}</small>
+        <small>{{ post.autor_nombre }}</small>
+        <p>{{ post.contenido | safe }}</p>
+            {% for media in post.archivos %}
+                {% if media.tipo_archivo == 'application/pdf' %}
+                    <a href="{{ url_for('static', filename=media.ruta_archivo) }}" target="_blank">
+                        📄 {{ media.nombre_original }}
+                    </a><br>
+                    {% elif media.tipo_archivo == 'text/plain' %}
+                        <a href="{{ url_for('ver_texto', media_id=media.id) }}" target="_blank">
+                            📝 {{ media.nombre_original }}
+                        </a><br>
+                {% endif %}
+            {% endfor %}
+    </article>
+
+    <section class="comentarios">
+        <h2>Comentarios</h2>
+        <ul>
+            {% for comentario in comentarios %}
+            <li class="comentario-item">
+                <strong>{{ comentario.autor }}</strong> dice:
+                <p>{{ comentario.texto }}</p>
+            </li>
+            {% else %}
+                <p>Sé el primero en comentar.</p>
+            {% endfor %}
+        </ul>
+        <div>
+            <h3>Deja un comentario</h3>
+            <form action="{{ url_for('agregar_comentario', post_id=post.id) }}" method="post">
+                <div class="form-group">
+                    <label for="autor">Nombre:</label>
+                    <input type="text" name="autor" required class="form-control">
+                </div>
+            
+                <div class="form-group">
+                    <label for="texto">Comentario:</label>
+                    <textarea name="texto" rows="4" required class="form-control"></textarea>
+                </div>
+            
+                <button type="submit" class="btn">Enviar Comentario</button>
+            </form>
+        </div>
+    </section>
+{% endblock %}
