@@ -40,13 +40,15 @@
             {% endfor %}
         </ul>
         <div>
-        {% for num in range(1, total_paginas + 1) %}
-            {% if num == pagina %}
-                <strong>{{ num }}</strong>
-            {% else %}
-                <a href="{{ url_for('index', pagina=num) }}">{{ num }}</a>
-            {% endif %}
-        {% endfor %}
+            {% for p in paginas %}
+                {% if p == "..." %}
+                    <span>...</span>
+                {% elif p == pagina %}
+                    <strong style="color: crimson;">{{ p }}</strong>
+                {% else %}
+                    <a href="{{ url_for('index', pagina=p) }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
         </div>
     {% else %}
             {% if user_id %}

@@ -86,6 +86,21 @@ def limpiar_contenido(contenido):
     resultado = bleach.linkify(contenido_limpio, callbacks=[set_target_blank])
     return resultado
 
+def generar_paginas(pagina_actual, total_paginas, rango=2):
+    paginas = []
+
+    for p in range(1, total_paginas + 1):
+        if (
+            p == 1 or
+            p == total_paginas or
+            abs(p - pagina_actual) <= rango
+        ):
+            paginas.append(p)
+        elif paginas and paginas[-1] != "...":
+            paginas.append("...")
+
+    return paginas
+
 app = Flask(__name__, 
             template_folder=os.path.join('src', 'templates'),
             static_folder='src/static',
@@ -195,6 +210,7 @@ def index():
         cursor.execute("SELECT COUNT(*) as total FROM posts")
         total_posts = cursor.fetchone()['total']
         total_paginas = (total_posts + POSTS_POR_PAGINA - 1) // POSTS_POR_PAGINA
+        paginas = generar_paginas(pagina, total_paginas)
 
     except Exception as e:
         posts = []
@@ -207,8 +223,7 @@ def index():
         user_id=session.get('user_id'),
         user_name=session.get('user_name'),
         titulo="Inicio",
-        pagina=pagina,
-        total_paginas=total_paginas
+        paginas=paginas,
     )
 
 @app.route('/auth', methods=['GET', 'POST'])
