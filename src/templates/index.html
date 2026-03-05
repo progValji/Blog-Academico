@@ -1,3 +1,35 @@
+<style>
+    .post{
+        border: 2px solid;
+        margin-bottom: 1rem;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        list-style: none;
+        padding: 10px;
+    }
+
+    /* Clase que JS añadirá para mostrar el menú */
+    .dropdown-content.show {
+    display: block;
+    }
+
+    /*  Modal   */
+    dialog {
+        border: none;
+        border-radius: 8px;
+        padding: 20px;
+        width: 300px;
+    }
+
+    /* Estilo para el fondo oscuro */
+    dialog::backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+</style>
 {% extends "base.html" %}
 
 {% block contenido %}
@@ -6,6 +38,42 @@
         <ul>
             {% for post in posts %}
                 <article class="post">
+
+                    {% if user_id == post.user_id %}
+                    <div class="dropdown">
+                        <button class="dropdown-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                            stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline 
+                            icon-tabler-settings">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 
+                            1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 
+                            1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 
+                            2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724
+                            1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 
+                            -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 
+                            -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" />
+                            <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
+                        </button>
+                        <ul class="dropdown-content">
+                            <li><button>Editar</button></li>
+                            <li>
+                                <button 
+                                    type="button"
+                                    class="open_delete_modal"
+                                    data-post-id="{{ post.id }}">
+                                    Eliminar
+                                </button>
+                            </li>
+                            <!-- <a href="{{ url_for('crear_post', id=post.id) }}">Editar</a> -->
+                            <!-- <form action="{{ url_for('crear_post', id=post.id) }}" method="POST">
+                                <button type="submit" class="delete-btn">Eliminar</button>
+                            </form> -->
+                        </ul>
+                    </div>
+                    {% endif %}
+
                     <h3>{{ post.titulo }}</h3>
                     <small>{{ post.created_at | tiempo_relativo }}</small>
                     <small>{{ post.autor_nombre }}</small>
@@ -63,4 +131,57 @@
         <a href="{{ url_for('crear_post') }}">Crea un post</a>
     </div>
 
+    <!-- Modal -->
+    <dialog id="eliminar_post">
+        <div>
+            <h3>¿Eliminar publicación?</h3>
+            <p>Esta acción no se puede deshacer.</p>
+
+            <div class="modal-buttons">
+                <button class="close_delete_modal">Cancelar</button>
+                <button class="confirm_delete_post" class="danger">Eliminar</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        const modal = document.getElementById('eliminar_post');
+
+        document.querySelectorAll('.dropdown-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const dropdown = this.closest('.dropdown');
+                const menu = dropdown.querySelector('.dropdown-content');
+                menu.classList.toggle('show');
+            });
+        });
+
+        document.querySelectorAll('.open_delete_modal').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                modal.dataset.postId = postId;
+                modal.showModal();
+            });
+        });
+
+        document.querySelectorAll('.close_delete_modal').forEach(function(button){
+            button.addEventListener('click', function(){
+                modal.close()
+            })
+        })
+
+        document.querySelectorAll('.confirm_delete_post').forEach(function(button){
+            button.addEventListener('click', function(){
+                const postId = modal.dataset.postId;
+    
+                if (postId) {
+                    const form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = `/eliminar_post/${postId}`;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            })
+        });
+
+    </script>
 {% endblock %}

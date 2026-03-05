@@ -189,6 +189,7 @@ def index():
             if post_id not in posts_dict:
                 posts_dict[post_id] = {
                     'id': fila['id'],
+                    'user_id': fila['user_id'],
                     'titulo': fila['titulo'],
                     'contenido': fila['contenido'],
                     'autor_nombre': fila['autor_nombre'],
@@ -292,7 +293,7 @@ def login():
                     conexion.commit()
                     cursor.close()
                     conexion.close()
-                    return redirect(url_for('panel_control'))
+                    return redirect(url_for('perfil'))
                 else:
                     intentos_fallidos += 1
                     nuevo_bloqueado_hasta = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEADO) if intentos_fallidos >= 5 else None
@@ -322,7 +323,7 @@ def login():
                     session['user_name'] = nombre
                     cursor.close()
                     conexion.close()
-                    return redirect(url_for('panel_control'))
+                    return redirect(url_for('perfil'))
             
             cursor.close()
             conexion.close()
@@ -420,10 +421,13 @@ def restablecer_contraseña(token):
     
     return render_template('restablecer_contraseña.html', mensaje=mensaje, token_valido=token_valido, titulo = "Restablecer Contraseña")
 
-@app.route('/panel_control')
+@app.route('/perfil')
 @login_requerido
-def panel_control():
-    return render_template('panel_de_control.html', user_name = session['user_name'], titulo="Panel Control")
+def perfil():
+    return render_template('perfil.html',
+                            user_name = session['user_name'],
+                            user_id = session['user_id'],
+                            titulo="Perfil")
 
 @app.route('/cerrar_sesion')
 def cerrar_sesion():
@@ -566,6 +570,21 @@ def visualizar_post(post_id):
         user_id=session.get('user_id')
         
     )
+
+@app.route('/eliminar_post/<int:post_id>', methods=['POST'])
+def eliminar_post(post_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    try:
+        cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+        conexion.commit()
+        flash('Post borrado con exito', 'success')
+    except:
+        flash('Ocurrió un error al guardar el post. Inténtalo de nuevo.', 'error')
+    finally:
+        cursor.close()
+        conexion.close()
+    return redirect(url_for('index'))
 
 @app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
 def agregar_comentario(post_id):
