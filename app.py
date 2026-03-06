@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, session, flash, abort, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import pymysql
@@ -24,7 +24,13 @@ RETRASO_BASE = 2 #SEGUNDOS
 POSTS_POR_PAGINA = 10
 
 # Configuración de subida de archivos
-UPLOAD_FOLDER = 'src/static/uploads/posts'
+UPLOAD_FOLDER = os.path.join(
+    os.path.dirname(__file__),
+    'src',
+    'static',
+    'uploads',
+    'posts'
+)
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'xlsx', 'pptx'}
 
 def calcular_retraso_exponencial(intenos_fallidos):
@@ -105,6 +111,32 @@ app = Flask(__name__,
             template_folder=os.path.join('src', 'templates'),
             static_folder='src/static',
             static_url_path='/static')
+
+def borrar_archivos(id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    try:
+        cursor.execute("SELECT file_url FROM post_media WHERE post_id = %s", (id, ))
+        archivos = cursor.fetchall()
+
+        if not archivos:
+            return
+
+        for archivo in archivos:
+            file_url = archivo[0]
+            
+            ruta_archivo = os.path.join(
+                UPLOAD_FOLDER,
+                os.path.basename(file_url)
+            )
+
+            if os.path.exists(ruta_archivo):
+                os.remove(ruta_archivo)
+    except Exception as e:
+        print('Error: ', e)
+    finally:
+        cursor.close()
+        conexion.close()
 
 @app.template_filter('tiempo_relativo')
 def tiempo_relativo(fecha):
@@ -576,6 +608,7 @@ def eliminar_post(post_id):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
     try:
+        borrar_archivos(post_id)
         cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
         conexion.commit()
         flash('Post borrado con exito', 'success')
