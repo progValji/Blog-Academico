@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <link rel="stylesheet" href="{{ url_for('static', filename='CSS/output.css') }}"> -->
     <title>Blog Academico - {{ titulo }}</title>
+    <style>
+        dialog {
+            border: none;
+            border-radius: 8px;
+            padding: 20px;
+            width: 300px;
+        }
+
+        /* Estilo para el fondo oscuro */
+        dialog::backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -36,8 +49,46 @@
         {% endblock %}
     </main>
 
+    <dialog id="confirm_modal">
+        <div>
+            <h2 id="confirm_modal_title"></h2>
+            <p id="confirm_modal_message"></p>
+            <div class="confirm_modal-buttons">
+                <button id="confirm_modal_cancel">Cancelar</button>
+                <form id="confirm_modal_form" method="POST">
+                    <button type="submit" id="confirm_modal_confirm">Confirmar</button>
+                </form>
+            </div>
+        </div>
+    </dialog>
+
     <footer>
         <p>Footer - Osvaldo Valdivia</p>
     </footer>
+
+    <script>
+        const confirmModal = document.getElementById('confirm_modal');
+
+        function openConfirmModal({ title, message, confirmText, action }) {
+            document.getElementById('confirm_modal_title').textContent = title;
+            document.getElementById('confirm_modal_message').textContent = message;
+            document.getElementById('confirm_modal_confirm').textContent = confirmText || 'Confirmar';
+            document.getElementById('confirm_modal_form').action = action;
+            confirmModal.showModal();
+        };
+
+        document.querySelectorAll('.open_delete_modal').forEach(function(button) {
+            button.addEventListener('click', function() {
+                openConfirmModal({
+                    title: this.dataset.title,
+                    message: this.dataset.message,
+                    confirmText: 'Eliminar',
+                    action: this.dataset.action
+                });
+            });
+        });
+
+        document.getElementById('confirm_modal_cancel').addEventListener('click', () => confirmModal.close());
+    </script>
 </body>
 </html>

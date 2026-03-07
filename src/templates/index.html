@@ -17,18 +17,6 @@
     display: block;
     }
 
-    /*  Modal   */
-    dialog {
-        border: none;
-        border-radius: 8px;
-        padding: 20px;
-        width: 300px;
-    }
-
-    /* Estilo para el fondo oscuro */
-    dialog::backdrop {
-        background-color: rgba(0, 0, 0, 0.5);
-    }
 </style>
 {% extends "base.html" %}
 
@@ -39,7 +27,6 @@
             {% for post in posts %}
                 <article class="post">
 
-                    {% if user_id == post.user_id %}
                     <div class="dropdown">
                         <button class="dropdown-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
@@ -57,24 +44,26 @@
                             <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
                         </button>
                         <ul class="dropdown-content">
-                            <li><button>Editar</button></li>
                             <li>
-                                <button 
-                                    type="button"
-                                    class="open_delete_modal"
-                                    data-post-id="{{ post.id }}">
-                                    Eliminar
-                                </button>
+                                <button type="button">Copiar enalce</button>
+                                {% if user_id == post.user_id %}
+                                    <button type="button">Editar</button>
+                                    <button 
+                                        type="button"
+                                        data-title="¿Estas seguro de eliminar esta publicación?"
+                                        data-message="Esta acción no se puede deshacer."
+                                        data-action="/eliminar_post/{{ post.id }}"
+                                        class="open_delete_modal">
+                                        Eliminar post
+                                    </button>
+                                {% else %}
+                                    <button>Guardar</button>
+                                {% endif %}
                             </li>
-                            <!-- <a href="{{ url_for('crear_post', id=post.id) }}">Editar</a> -->
-                            <!-- <form action="{{ url_for('crear_post', id=post.id) }}" method="POST">
-                                <button type="submit" class="delete-btn">Eliminar</button>
-                            </form> -->
                         </ul>
                     </div>
-                    {% endif %}
 
-                    <h3>{{ post.titulo }}</h3>
+                    <a href="{{ url_for('visualizar_post', post_id=post.id) }}"><h3>{{ post.titulo }}</h3></a>
                     <small>{{ post.created_at | tiempo_relativo }}</small>
                     <small>{{ post.autor_nombre }}</small>
                     <p>{{ post.contenido[:10] }}...</p>
@@ -91,18 +80,22 @@
                         {% endif %}
                     {% endfor %}
                         
-                    <a href="{{ url_for('visualizar_post', post_id=post.id) }}">
+                    <div>
                         {% if post.total_comentarios == 0 %}
-                            Se el primero en comentar
+                            <p>Se el primero en comentar</p>
                         {% else %}
-                            {{ post.total_comentarios }} Comentarios
+                            <p>{{ post.total_comentarios }} Comentarios</p>
                         {% endif %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
-                        stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-messages">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
-                        <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" /></svg>
-                    </a>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                            stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline 
+                            icon-tabler-messages">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 14l-3 
+                            -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
+                            <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" /></svg>
+                        </span>
+                    </div>
 
                 </article>
             {% endfor %}
@@ -131,56 +124,13 @@
         <a href="{{ url_for('crear_post') }}">Crea un post</a>
     </div>
 
-    <!-- Modal -->
-    <dialog id="eliminar_post">
-        <div>
-            <h3>¿Eliminar publicación?</h3>
-            <p>Esta acción no se puede deshacer.</p>
-
-            <div class="modal-buttons">
-                <button class="close_delete_modal">Cancelar</button>
-                <button class="confirm_delete_post" class="danger">Eliminar</button>
-            </div>
-        </div>
-    </dialog>
-
     <script>
-        const modal = document.getElementById('eliminar_post');
-
         document.querySelectorAll('.dropdown-btn').forEach(function(button) {
             button.addEventListener('click', function() {
                 const dropdown = this.closest('.dropdown');
                 const menu = dropdown.querySelector('.dropdown-content');
                 menu.classList.toggle('show');
             });
-        });
-
-        document.querySelectorAll('.open_delete_modal').forEach(function(button) {
-            button.addEventListener('click', function() {
-                const postId = this.dataset.postId;
-                modal.dataset.postId = postId;
-                modal.showModal();
-            });
-        });
-
-        document.querySelectorAll('.close_delete_modal').forEach(function(button){
-            button.addEventListener('click', function(){
-                modal.close()
-            })
-        })
-
-        document.querySelectorAll('.confirm_delete_post').forEach(function(button){
-            button.addEventListener('click', function(){
-                const postId = modal.dataset.postId;
-    
-                if (postId) {
-                    const form = document.createElement("form");
-                    form.method = "POST";
-                    form.action = `/eliminar_post/${postId}`;
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            })
         });
 
     </script>

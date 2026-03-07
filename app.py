@@ -579,7 +579,7 @@ def visualizar_post(post_id):
                 })
 
         cursor.execute("""
-        SELECT u.nombre_usuario AS autor, c.contenido, c.created_at
+        SELECT u.nombre_usuario AS autor, c.contenido, c.created_at, c.user_id, c.id
         FROM comentarios c
         INNER JOIN usuarios u ON c.user_id = u.id
         WHERE c.post_id = %s
@@ -587,20 +587,18 @@ def visualizar_post(post_id):
         """, (post_id,))
         comentarios = cursor.fetchall()
 
-        cursor.close()
-        conexion.close()
-
     except Exception as e:
         print("Error:", e)
         abort(500)
-
+    finally:
+        cursor.close()
+        conexion.close()
     return render_template(
         'visualizar_post.html',
         titulo="Detalles Post",
         post=post,
         comentarios=comentarios,
         user_id=session.get('user_id')
-        
     )
 
 @app.route('/eliminar_post/<int:post_id>', methods=['POST'])
@@ -613,11 +611,37 @@ def eliminar_post(post_id):
         conexion.commit()
         flash('Post borrado con exito', 'success')
     except:
-        flash('Ocurrió un error al guardar el post. Inténtalo de nuevo.', 'error')
+        flash('Ocurrió un error al borrar el post. Inténtalo de nuevo.', 'error')
     finally:
         cursor.close()
         conexion.close()
     return redirect(url_for('index'))
+
+@app.route('/eliminar_comentario/<int:comentario_id>', methods=['POST'])
+def eliminar_comentario(comentario_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    try:
+        cursor.execute("SELECT post_id FROM comentarios WHERE id = %s", (comentario_id,))
+        resultado = cursor.fetchone()
+
+        if resultado is None:
+            flash('El comentario no existe.', 'error')
+            return redirect(url_for('index'))
+
+        post_id = resultado[0]
+
+        cursor.execute("DELETE FROM comentarios WHERE id = %s", (comentario_id,))
+        conexion.commit()
+
+        flash('Comentario borrado con éxito', 'success')
+    except Exception as e:
+        flash('Ocurrió un error al eliminar el comentario.', 'error')
+    finally:
+        cursor.close()
+        conexion.close()
+    return redirect(url_for('visualizar_post', post_id=post_id))
 
 @app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
 def agregar_comentario(post_id):
