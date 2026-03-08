@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/_form_post.html" import form_post %}
 
 {% block contenido %}
 
@@ -16,27 +17,8 @@
 
     <h1>Crear nuevo Post</h1>
     
-    <form method="post" enctype="multipart/form-data">
-        <div>
-            <label for="titulo">Título</label>
-            <input id="titulo" name="titulo" type="text" required autocomplete="off">
-        </div>
-
-        <div>
-            <label for="contenido">Escribe tu post aqui...</label>
-            <textarea id="contenido" name="contenido" required></textarea>
-        </div>
-
-        <div>
-            <label for="adjuntos">Adjuntar archivos</label>
-            <input id="adjuntos" name="adjuntos" type="file" accept=".pdf, .txt" multiple>
-        </div>
-
-        <div id="filesPreview" class="files-list" aria-live="polite"></div>
-
-        <div class="actions">
-            <button type="submit">Publicar</button>
-            <a href="{{ url_for('index') }}" style="align-self:center">Cancelar</a>
-        </div>
-    </form>
+    {{ form_post(
+        url_for('crear_post'),
+        submit_text='Crear Post'       
+    ) }}
 {% endblock %}

@@ -1,0 +1,43 @@
+{% macro form_post(action_url, submit_text='', titulo='', contenido='',
+    adjuntos_existentes=[], cancel_type='link') %}
+<form id="postForm" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="titulo">Título</label>
+        <input id="titulo" name="titulo" type="text" required autocomplete="off" value="{{ titulo }}">
+    </div>
+
+    <div>
+        <label for="contenido">Escribe tu post aqui...</label>
+        <textarea id="contenido" name="contenido" required>{{ contenido }}</textarea>
+    </div>
+
+    <div>
+        <label for="adjuntos">Adjuntar archivos</label>
+        <input id="adjuntos" name="adjuntos" type="file" accept=".pdf, .txt" multiple>
+    </div>
+
+    <div id="filesPreview" class="files-list" aria-live="polite">
+        {% for media in adjuntos_existentes %}
+            {% if media.tipo_archivo == 'application/pdf' %}
+                <a href="{{ url_for('static', filename=media.ruta_archivo) }}" target="_blank">
+                    📄 {{ media.nombre_original }}
+                </a><br>
+            {% elif media.tipo_archivo == 'text/plain' %}
+                <a href="{{ url_for('ver_texto', media_id=media.id) }}" target="_blank">
+                    📝 {{ media.nombre_original }}
+                </a><br>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="actions">
+        <button type="submit">{{ submit_text }}</button>
+
+        {% if cancel_type == 'button' %}
+            <button type="button" onclick="this.closest('dialog').close()">Cancelar</button>
+        {% else %}
+            <a href="{{ cancel_target or url_for('index') }}" style="align-self:center">Cancelar</a>
+        {% endif %}
+    </div>
+</form>
+{% endmacro %}

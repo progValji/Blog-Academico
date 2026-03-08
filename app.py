@@ -601,6 +601,10 @@ def visualizar_post(post_id):
         user_id=session.get('user_id')
     )
 
+@app.route('/editar_post/<int:post_id>', methods=['POST'])
+def editar_post(post_id):
+    return 'hola'
+
 @app.route('/eliminar_post/<int:post_id>', methods=['POST'])
 def eliminar_post(post_id):
     conexion = obtener_conexion()

@@ -19,6 +19,7 @@
 
 </style>
 {% extends "base.html" %}
+{% from "macros/_form_post.html" import form_post %}
 
 {% block contenido %}
     <section>
@@ -45,9 +46,11 @@
                         </button>
                         <ul class="dropdown-content">
                             <li>
-                                <button type="button">Copiar enalce</button>
                                 {% if user_id == post.user_id %}
-                                    <button type="button">Editar</button>
+                                    <button 
+                                        type="button" 
+                                        onclick="document.getElementById('modal__edit__{{ post.id }}').showModal()">
+                                        Editar</button>
                                     <button 
                                         type="button"
                                         data-title="¿Estas seguro de eliminar esta publicación?"
@@ -97,6 +100,22 @@
                         </span>
                     </div>
 
+                    <dialog id="modal__edit__{{ post.id }}">
+                        <div>
+                            <form method="post" action="{{ url_for('editar_post', post_id=post.id) }}"
+                            enctype="multipart/form-data">
+                                {{ form_post(
+                                        submit_text = 'Guardar',
+                                        titulo=post.titulo,
+                                        contenido=post.contenido,
+                                        adjuntos_existentes=post.archivos,
+                                        cancel_type='button'
+                                    ) 
+                                }}
+                            </form>
+                        </div>
+                    </dialog>
+
                 </article>
             {% endfor %}
         </ul>
@@ -105,7 +124,7 @@
                 {% if p == "..." %}
                     <span>...</span>
                 {% elif p == pagina %}
-                    <strong style="color: crimson;">{{ p }}</strong>
+                    <strong>{{ p }}</strong>
                 {% else %}
                     <a href="{{ url_for('index', pagina=p) }}">{{ p }}</a>
                 {% endif %}
@@ -132,6 +151,7 @@
                 menu.classList.toggle('show');
             });
         });
+
 
     </script>
 {% endblock %}
