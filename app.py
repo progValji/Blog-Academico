@@ -138,6 +138,65 @@ def borrar_archivos(id):
         cursor.close()
         conexion.close()
 
+def salvar_post(post_id=None): # Recibe el ID si es edición, None si es creación
+    titulo = request.form.get('titulo', '').strip()
+    contenido = request.form.get('contenido')
+    files = request.files.getlist('adjuntos')
+
+    if not titulo or not contenido:
+        flash('El título y el contenido no pueden estar vacíos.', 'error')
+        return redirect(request.url)
+    
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+        resultado = limpiar_contenido(contenido)
+
+        saved_files = []
+        for file in files:
+            if file and file.filename != '' and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                extension = filename.rsplit('.', 1)[1].lower()
+                unique_name = f"{uuid.uuid4()}.{extension}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+                file.save(filepath)
+                relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
+                saved_files.append((relative_path, file.mimetype or extension, filename))
+
+        if post_id:
+            sql = """
+                UPDATE posts 
+                SET titulo = %s, contenido = %s 
+                WHERE id = %s AND user_id = %s
+            """
+            cursor.execute(sql, (titulo, resultado, post_id, session['user_id']))
+            mensaje = '¡Post actualizado!'
+        else:
+            sql = """
+                INSERT INTO posts (user_id, titulo, contenido, created_at)
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(sql, (session['user_id'], titulo, resultado, datetime.now()))
+            post_id = cursor.lastrowid
+            mensaje = '¡Post creado!'
+
+        if saved_files:
+            media_sql = """
+                INSERT INTO post_media (post_id, file_url, file_type, nombre_original)
+                VALUES (%s, %s, %s, %s)
+            """
+            media_params = [(post_id, path, ftype, name) for path, ftype, name in saved_files]
+            cursor.executemany(media_sql, media_params)
+        
+        conexion.commit()
+        flash(mensaje, 'success')
+    except Exception as e:
+        conexion.rollback() 
+        flash(f'Ocurrió un error: {str(e)}', 'error')
+    finally:
+        cursor.close()
+        conexion.close()
+
 @app.template_filter('tiempo_relativo')
 def tiempo_relativo(fecha):
     ahora = datetime.now()
@@ -470,66 +529,7 @@ def cerrar_sesion():
 @login_requerido
 def crear_post():
     if request.method == 'POST':
-        titulo = request.form.get('titulo', '').strip()
-        contenido = request.form.get('contenido')
-        files = request.files.getlist('adjuntos')
-
-        if not titulo or not contenido:
-            flash('El titulo y el contenido no pueden estar vacios.', 'error')
-            return redirect(request.url)
-
-        try:
-            conexion = obtener_conexion()
-            cursor = conexion.cursor()
-
-            resultado = limpiar_contenido(contenido)
-
-            saved_files = []
-            for file in files:
-                if file and file.filename != '' and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    extension = filename.rsplit('.', 1)[1].lower()
-                    unique_name = f"{uuid.uuid4()}.{extension}"
-
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
-                    file.save(filepath)
-
-                    relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
-                    print(file.mimetype or extension)
-                    saved_files.append((relative_path, file.mimetype or extension, filename))
-                elif file and file.filename != '':
-                    flash(f'El archivo {file.filename} no tiene un formato permitido.', 'warning')
-
-            sql = """
-                INSERT INTO posts (user_id, titulo, contenido, created_at)
-                VALUES (%s, %s, %s, %s)
-            """
-            cursor.execute(sql, (
-                session['user_id'],
-                titulo,
-                resultado,
-                datetime.now()
-            ))
-            conexion.commit()
-
-            post_id = cursor.lastrowid
-            if saved_files:
-                media_sql = """
-                    INSERT INTO post_media (post_id, file_url, file_type, nombre_original)
-                    VALUES (%s, %s, %s, %s)
-                """
-                media_params = [(post_id, path, ftype, nombre_original) for path, ftype, nombre_original in saved_files]
-                cursor.executemany(media_sql, media_params)
-                conexion.commit()
-            flash('¡Tu post ha sido publicado exitosamente!','success')
-            
-        except Exception as e:
-            flash('Ocurrió un error al guardar el post. Inténtalo de nuevo.', 'error')
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
-            if 'conexion' in locals() and conexion:
-                conexion.close()
+        salvar_post()
         return redirect(url_for('index'))
     return render_template("crear_post.html", titulo="Crea Un Post")
 
@@ -603,7 +603,18 @@ def visualizar_post(post_id):
 
 @app.route('/editar_post/<int:post_id>', methods=['POST'])
 def editar_post(post_id):
-    return 'hola'
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+        cursor.execute("SELECT * FROM posts WHERE id = %s", (post_id,))
+        post = cursor.fetchone()
+
+        if post is None: abort(404)
+        salvar_post(post_id)
+        return redirect(url_for('index'))
+    finally:
+        cursor.close()
+        conexion.close()
 
 @app.route('/eliminar_post/<int:post_id>', methods=['POST'])
 def eliminar_post(post_id):
