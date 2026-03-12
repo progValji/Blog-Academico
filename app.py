@@ -27,9 +27,7 @@ POSTS_POR_PAGINA = 10
 UPLOAD_FOLDER = os.path.join(
     os.path.dirname(__file__),
     'src',
-    'static',
-    'uploads',
-    'posts'
+    'static'
 )
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'xlsx', 'pptx'}
 
@@ -126,7 +124,8 @@ def borrar_archivos(id):
             file_url = archivo[0]
             
             ruta_archivo = os.path.join(
-                UPLOAD_FOLDER,
+                app.config['UPLOAD_FOLDER'],
+                "uploads/posts",
                 os.path.basename(file_url)
             )
 
@@ -152,13 +151,31 @@ def salvar_post(post_id=None): # Recibe el ID si es edición, None si es creaci�
         cursor = conexion.cursor()
         resultado = limpiar_contenido(contenido)
 
+        if post_id:
+            conservar_ids = request.form.getlist('adjuntos_conservar')
+            conservar_ids = [int(id) for id in conservar_ids]
+
+            cursor.execute("SELECT id, file_url FROM post_media WHERE post_id = %s", (post_id,))
+            adjuntos_actuales = cursor.fetchall()
+
+            # Comparar: los que están en BD pero NO en conservar → eliminar
+            for adjunto in adjuntos_actuales:
+                if adjunto[0] not in conservar_ids:
+                    ruta_completa = os.path.join(app.config['UPLOAD_FOLDER'], adjunto[1])
+                    if os.path.exists(ruta_completa):
+                        os.remove(ruta_completa)
+                    cursor.execute("DELETE FROM post_media WHERE id = %s", (adjunto[0],))
+                    conexion.commit()
+                    # 2. Borrar el registro de la BD
+                    #db.session.delete(adjunto), algo asi
+
         saved_files = []
         for file in files:
             if file and file.filename != '' and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 extension = filename.rsplit('.', 1)[1].lower()
                 unique_name = f"{uuid.uuid4()}.{extension}"
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'uploads', 'posts' ,unique_name)
                 file.save(filepath)
                 relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
                 saved_files.append((relative_path, file.mimetype or extension, filename))
