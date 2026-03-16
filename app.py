@@ -214,6 +214,38 @@ def salvar_post(post_id=None): # Recibe el ID si es edición, None si es creaci�
         cursor.close()
         conexion.close()
 
+# Recibe comentario_id si es edicion, None si es creacion
+def salvar_comentario(comentario_id = None, post_id = None):
+    texto = request.form.get('texto', '').strip()
+
+    if not texto:
+        flash('El comentario no puede estar vacío.', 'error')
+        return redirect(url_for('visualizar_post', post_id=post_id))
+
+    texto_limpio = limpiar_contenido(texto)
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
+        if comentario_id:
+            cursor.execute("""
+                UPDATE comentarios
+                SET contenido = %s
+                WHERE id = %s
+                """, (texto_limpio, comentario_id))
+        else:
+            user_id = session.get('user_id')
+            cursor.execute("""
+                INSERT INTO comentarios (post_id, user_id, contenido, created_at)
+                VALUES (%s, %s, %s, %s)
+            """, (post_id, user_id, texto_limpio, datetime.now()))
+        conexion.commit()
+    except Exception as e:
+        flash('Ocurrió un error al agregar el comentario.', 'error')
+    finally:
+        cursor.close()
+        conexion.close()
+
 @app.template_filter('tiempo_relativo')
 def tiempo_relativo(fecha):
     ahora = datetime.now()
@@ -675,31 +707,10 @@ def eliminar_comentario(comentario_id):
         conexion.close()
     return redirect(url_for('visualizar_post', post_id=post_id))
 
-@app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
+"""@app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
 def agregar_comentario(post_id):
-    user_id = session.get('user_id')
-    texto = request.form.get('texto', '').strip()
-
-    if not texto:
-        flash('El comentario no puede estar vacío.', 'error')
-        return redirect(url_for('visualizar_post', post_id=post_id))
-
-    texto_limpio = limpiar_contenido(texto)
-    try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
-        cursor.execute("""
-            INSERT INTO comentarios (post_id, user_id, contenido, created_at)
-            VALUES (%s, %s, %s, %s)
-        """, (post_id, user_id, texto_limpio, datetime.now()))
-        conexion.commit()
-    except Exception as e:
-        flash('Ocurrió un error al agregar el comentario.', 'error')
-    finally:
-        cursor.close()
-        conexion.close()
-
-    return redirect(url_for('visualizar_post', post_id=post_id))
+    salvar_comentario(post_id=post_id)
+    return redirect(url_for('visualizar_post', post_id=post_id))"""
 
 @app.route('/ver_texto/<int:media_id>')
 def ver_texto(media_id):

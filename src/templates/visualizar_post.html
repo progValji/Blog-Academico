@@ -88,7 +88,7 @@
             <form action="{{ url_for('agregar_comentario', post_id=post.id) }}" method="post">
                 {% if session.get('user_id') %}
                 <div class="form-group">
-                    <label for="texto">Comentario:</label>
+                    <label for="texto">Comentario</label>
                     <textarea name="texto" rows="4" required class="form-control"></textarea>
                 </div>
                 <button type="submit" class="btn">Enviar Comentario</button>
