@@ -246,6 +246,33 @@ def salvar_comentario(comentario_id = None, post_id = None):
         cursor.close()
         conexion.close()
 
+def preparar_posts(resultados):
+    posts_dict = {}
+    for fila in resultados:
+            post_id = fila['id']
+
+            if post_id not in posts_dict:
+                posts_dict[post_id] = {
+                    'id': fila['id'],
+                    'user_id': fila['user_id'],
+                    'titulo': fila['titulo'],
+                    'contenido': fila['contenido'],
+                    'autor_nombre': fila['autor_nombre'],
+                    'total_comentarios': fila['total_comentarios'],
+                    'created_at': fila['created_at'],
+                    'archivos': []
+                }
+
+            if fila['media_id']:
+                posts_dict[post_id]['archivos'].append({
+                    'id': fila['media_id'],
+                    'ruta_archivo': fila['file_url'],
+                    'nombre_original': fila['nombre_original'],
+                    'tipo_archivo': fila['file_type']
+                })
+
+    return list(posts_dict.values())
+
 @app.template_filter('tiempo_relativo')
 def tiempo_relativo(fecha):
     ahora = datetime.now()
@@ -318,35 +345,8 @@ def index():
         ORDER BY p.created_at DESC
         LIMIT %s OFFSET %s;
         """, (POSTS_POR_PAGINA, offset))
-
         resultados = cursor.fetchall()
-
-        posts_dict = {}
-
-        for fila in resultados:
-            post_id = fila['id']
-
-            if post_id not in posts_dict:
-                posts_dict[post_id] = {
-                    'id': fila['id'],
-                    'user_id': fila['user_id'],
-                    'titulo': fila['titulo'],
-                    'contenido': fila['contenido'],
-                    'autor_nombre': fila['autor_nombre'],
-                    'total_comentarios': fila['total_comentarios'],
-                    'created_at': fila['created_at'],
-                    'archivos': []
-                }
-
-            if fila['media_id']:
-                posts_dict[post_id]['archivos'].append({
-                    'id': fila['media_id'],
-                    'ruta_archivo': fila['file_url'],
-                    'nombre_original': fila['nombre_original'],
-                    'tipo_archivo': fila['file_type']
-                })
-
-        posts = list(posts_dict.values())
+        posts = preparar_posts(resultados)
 
         cursor.execute("SELECT COUNT(*) as total FROM posts")
         total_posts = cursor.fetchone()['total']
@@ -564,9 +564,53 @@ def restablecer_contraseña(token):
 @app.route('/perfil')
 @login_requerido
 def perfil():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    try:
+        cursor.execute("""
+            SELECT nombre_usuario, correo, creado_en
+            FROM usuarios
+            WHERE id = %s
+        """, (session['user_id'],))
+        datos_personales = cursor.fetchone()
+
+        pagina = request.args.get('pagina', 1, type=int)
+        offset = (pagina - 1) * POSTS_POR_PAGINA
+        cursor.execute("""
+        SELECT 
+        p.*,
+        IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
+        pm.id AS media_id,
+        pm.file_url,
+        pm.nombre_original,
+        pm.file_type,
+        (
+            SELECT COUNT(*) 
+            FROM comentarios c 
+            WHERE c.post_id = p.id
+        ) AS total_comentarios
+        FROM posts p
+        LEFT JOIN usuarios u ON p.user_id = u.id
+        LEFT JOIN post_media pm ON p.id = pm.post_id
+        WHERE user_id = %s
+        ORDER BY p.created_at DESC
+        LIMIT %s OFFSET %s;
+        """, (session['user_id'] ,POSTS_POR_PAGINA, offset))
+        resultados = cursor.fetchall()
+        posts = preparar_posts(resultados)
+        cursor.execute("SELECT COUNT(*) as total FROM posts WHERE user_id = %s", session['user_id'])
+        total_posts = cursor.fetchone()['total']
+        total_paginas = (total_posts + POSTS_POR_PAGINA - 1) // POSTS_POR_PAGINA
+        paginas = generar_paginas(pagina, total_paginas)
+    finally:
+        cursor.close()
+        conexion.close()
+
     return render_template('perfil.html',
-                            user_name = session['user_name'],
-                            user_id = session['user_id'],
+                           user_id = session['user_id'],
+                            datos_personales= datos_personales,
+                            posts = posts,
+                            paginas=paginas,
                             titulo="Perfil")
 
 @app.route('/cerrar_sesion')
@@ -707,10 +751,10 @@ def eliminar_comentario(comentario_id):
         conexion.close()
     return redirect(url_for('visualizar_post', post_id=post_id))
 
-"""@app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
+@app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
 def agregar_comentario(post_id):
     salvar_comentario(post_id=post_id)
-    return redirect(url_for('visualizar_post', post_id=post_id))"""
+    return redirect(url_for('visualizar_post', post_id=post_id))
 
 @app.route('/ver_texto/<int:media_id>')
 def ver_texto(media_id):

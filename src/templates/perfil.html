@@ -1,12 +1,69 @@
+<style>
+    .post{
+        border: 2px solid;
+        margin-bottom: 1rem;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        list-style: none;
+        padding: 10px;
+    }
+
+    /* Clase que JS añadirá para mostrar el menú */
+    .dropdown-content.show {
+    display: block;
+    }
+
+</style>
 {% extends "base.html" %}
+{% from "macros/_post_card.html" import render_post_card %}
 
 {% block contenido %}
-    <h1>Este es el panel de control</h1>
-    {% if user_name %}
-        <h2>Hola {{user_name}}</h2>
-    {% endif %}
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Delectus, eos qui corporis 
-        aperiam quas id sint consequatur eius asperiores repudiandae!</p>
+    <h1>Perfil</h1>
 
-    <a href="{{ url_for('cerrar_sesion') }}">Cerrar Sesion</a>
+    <div>
+        <button>Mis datos</button>
+        <button>Mis posts</button>
+        <button>Mis comentarios</button>
+    </div>
+
+    <section>
+        <h2>Hola {{ datos_personales.nombre_usuario }}</h2>
+        <p>Correo: {{ datos_personales.correo }}</p>
+        <p>Creado en: {{datos_personales.creado_en }}</p>
+
+        <hr>
+        <h2>Zona de edicion</h2>
+        <a href="{{ url_for('cerrar_sesion') }}">Cerrar Sesion</a>
+    </section>
+
+    <section>
+        <ul>
+            {% for post in posts %}
+                {{ render_post_card(post, user_id) }}
+            {% endfor %}
+        </ul>
+        {% for p in paginas %}
+                {% if p == "..." %}
+                    <span>...</span>
+                {% elif p == pagina %}
+                    <strong>{{ p }}</strong>
+                {% else %}
+                    <a href="{{ url_for('perfil', pagina=p) }}">{{ p }}</a>
+                {% endif %}
+        {% endfor %}
+    </section>
+
+    <script>
+        document.querySelectorAll('.dropdown-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const dropdown = this.closest('.dropdown');
+                const menu = dropdown.querySelector('.dropdown-content');
+                menu.classList.toggle('show');
+            });
+        });
+    </script>
 {% endblock %}

@@ -1,0 +1,92 @@
+{% from "macros/_form_post.html" import form_post %}
+{% macro render_post_card(post, user_id) %}
+    <article class="post">
+        <div class="dropdown">
+            <button class="dropdown-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline 
+                icon-tabler-settings">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 
+                1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 
+                1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 
+                2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724
+                1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 
+                -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 
+                -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" />
+                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
+            </button>
+            <ul class="dropdown-content">
+                <li>
+                    {% if user_id == post.user_id %}
+                        <button 
+                            type="button" 
+                            onclick="document.getElementById('modal__edit__{{ post.id }}').showModal()">
+                            Editar</button>
+                        <button 
+                            type="button"
+                            data-title="¿Estas seguro de eliminar esta publicación?"
+                            data-message="Esta acción no se puede deshacer."
+                            data-action="/eliminar_post/{{ post.id }}"
+                            class="open_delete_modal">
+                            Eliminar post
+                        </button>
+                    {% else %}
+                        <button>Guardar</button>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        <a href="{{ url_for('visualizar_post', post_id=post.id) }}"><h3>{{ post.titulo }}</h3></a>
+        <small>{{ post.created_at | tiempo_relativo }}</small>
+        <small>{{ post.autor_nombre }}</small>
+        <p>{{ post.contenido[:10] }}...</p>
+
+        {% for media in post.archivos %}
+            {% if media.tipo_archivo == 'application/pdf' %}
+                <a href="{{ url_for('static', filename=media.ruta_archivo) }}" target="_blank">
+                    📄 {{ media.nombre_original }}
+                </a><br>
+            {% elif media.tipo_archivo == 'text/plain' %}
+                <a href="{{ url_for('ver_texto', media_id=media.id) }}" target="_blank">
+                    📝 {{ media.nombre_original }}
+                </a><br>
+            {% endif %}
+        {% endfor %}
+            
+        <div>
+            {% if post.total_comentarios == 0 %}
+                <p>Se el primero en comentar</p>
+            {% else %}
+                <p>{{ post.total_comentarios }} Comentarios</p>
+            {% endif %}
+            <span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline 
+                icon-tabler-messages">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 14l-3 
+                -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
+                <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" /></svg>
+            </span>
+        </div>
+
+        <dialog id="modal__edit__{{ post.id }}">
+            <div>
+                <form method="post" action="{{ url_for('editar_post', post_id=post.id) }}"
+                enctype="multipart/form-data">
+                    {{ form_post(
+                            submit_text = 'Guardar',
+                            titulo=post.titulo,
+                            contenido=post.contenido,
+                            adjuntos_existentes=post.archivos,
+                            cancel_type='button'
+                        ) 
+                    }}
+                </form>
+            </div>
+        </dialog>
+    </article>
+{% endmacro %}
