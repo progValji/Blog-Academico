@@ -613,10 +613,30 @@ def perfil():
                             paginas=paginas,
                             titulo="Perfil")
 
+@app.route('/editar_perfil', methods=['POST'])
+def editar_perfil():
+    return'hola'
+
 @app.route('/cerrar_sesion')
 def cerrar_sesion():
     session.pop('user_id', None)
     return redirect(url_for('index'))
+
+@app.route('/eliminar_cuenta/<int:user_id>', methods=['POST'])
+def eliminar_cuenta(user_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    try:
+        cursor.execute("""
+            DELETE FROM usuarios WHERE id = %s
+        """, (user_id,))
+        conexion.commit()
+        borrar_archivos(user_id)
+        flash('Cuenta eliminada con exito', 'success')
+        redirect(url_for("index"))
+    finally:
+        cursor.close()
+        conexion.close()
 
 @app.route('/crear_post', methods=['GET', 'POST'])
 @login_requerido
