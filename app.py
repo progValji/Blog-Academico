@@ -614,8 +614,78 @@ def perfil():
                             titulo="Perfil")
 
 @app.route('/editar_perfil', methods=['POST'])
+@login_requerido
 def editar_perfil():
-    return'hola'
+    nombre_usuario = request.form.get('nombre_usuario', '').strip()
+    correo = request.form.get('correo', '').strip()
+    contraseña_actual = request.form.get('contraseña_actual', '')
+    nueva_contraseña = request.form.get('nueva_contraseña', '')
+    confirmar_contraseña = request.form.get('confirmar_contraseña', '')
+
+    if not nombre_usuario or not correo or not contraseña_actual:
+        flash('Por favor completa los campos requeridos', 'error')
+        return redirect(url_for('perfil'))
+    
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    try:
+        cursor.execute(
+            "SELECT nombre_usuario, correo, contraseña_hash FROM usuarios WHERE id = %s",
+            (session['user_id'],)
+        )
+        fila = cursor.fetchone()
+        if not fila or not check_password_hash(fila[2], contraseña_actual):
+            flash('La contraseña actual es incorrecta.', 'error')
+            return redirect(url_for('perfil'))
+
+        nombre_actual, correo_actual, _ = fila
+        campos = []
+        params = []
+
+        if nombre_usuario != nombre_actual:
+            cursor.execute(
+                "SELECT id FROM usuarios WHERE nombre_usuario = %s AND id != %s",
+                (nombre_usuario, session['user_id'])
+            )
+            if cursor.fetchone():
+                flash('El nombre de usuario ya está en uso.', 'error')
+                return redirect(url_for('perfil'))
+            campos.append("nombre_usuario = %s")
+            params.append(nombre_usuario)
+
+        if correo != correo_actual:
+            cursor.execute(
+                "SELECT id FROM usuarios WHERE correo = %s AND id != %s",
+                (correo, session['user_id'])
+            )
+            if cursor.fetchone():
+                flash('Intenta con otro correo', 'error')
+                return redirect(url_for('perfil'))
+            campos.append("correo = %s")
+            params.append(correo)
+
+        if nueva_contraseña or confirmar_contraseña:
+            if nueva_contraseña != confirmar_contraseña:
+                flash('Las contraseñas no coinciden.', 'error')
+                return redirect(url_for('perfil'))
+            campos.append("contraseña_hash = %s")
+            params.append(generate_password_hash(nueva_contraseña, method='pbkdf2:sha256'))
+
+        if campos:
+            params.append(session['user_id'])
+            sql = f"UPDATE usuarios SET {', '.join(campos)} WHERE id = %s"
+            cursor.execute(sql, tuple(params))
+            conexion.commit()
+            flash('Perfil actualizado correctamente.', 'success')
+        else:
+            flash('No se detectaron cambios.', 'info')
+        return redirect(url_for('perfil'))
+    except Exception as e:
+        flash(f'Ocurrió un error: {e}', 'error')
+        return redirect(url_for('perfil'))
+    finally:
+        cursor.close()
+        conexion.close()
 
 @app.route('/cerrar_sesion')
 def cerrar_sesion():
