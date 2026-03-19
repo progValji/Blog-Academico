@@ -90,7 +90,7 @@
     <section>
         <ul>
             {% for post in posts %}
-                {{ render_post_card(post, user_id) }}
+                {{ render_post_card(post, user_id, true) }}
             {% endfor %}
         </ul>
         {% for p in paginas %}
@@ -102,6 +102,11 @@
                     <a href="{{ url_for('perfil', pagina=p) }}">{{ p }}</a>
                 {% endif %}
         {% endfor %}
+    </section>
+
+    <section>
+        <h2>Tus comentarios</h2>
+
     </section>
 
     <script>

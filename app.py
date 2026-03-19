@@ -273,6 +273,28 @@ def preparar_posts(resultados):
 
     return list(posts_dict.values())
 
+def obtener_datos_paginados(cursor, consulta_datos, consulta_total, params_datos=(),
+                            params_total=(), pagina=None):
+    """
+    Ejecuta una consulta paginada y devuelve los resultados junto con la metadata de paginacion.
+    
+    - consulta_datos: SELECT principal con placeholders para (%s, %s) al final (LIMIT y OFFSET)
+    - consulta_total: SELECT COUNT(*) para obtener el total
+    - params_datos: tupla de parametros para consulta_datos (sin LIMIT ni OFFSET, se agregan aqui)
+    - params_total: tupla de parametros para consulta_total
+    - pagina: numero de pagina actual
+    """
+    offset = (pagina - 1) * POSTS_POR_PAGINA
+    cursor.execute(consulta_total, params_total)
+    total = cursor.fetchone()['total']
+
+    cursor.execute(consulta_datos, (*params_datos, POSTS_POR_PAGINA, offset))
+    resultados = cursor.fetchall()
+
+    total_paginas = (total + POSTS_POR_PAGINA - 1) // POSTS_POR_PAGINA
+    paginas = generar_paginas(pagina, total_paginas)
+    return resultados, paginas
+
 @app.template_filter('tiempo_relativo')
 def tiempo_relativo(fecha):
     ahora = datetime.now()
@@ -320,51 +342,45 @@ def login_requerido(f):
 @app.route('/')
 def index():
     pagina = request.args.get('pagina', 1, type=int)
-    offset = (pagina - 1) * POSTS_POR_PAGINA
-    total_paginas = 0
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
     try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor(pymysql.cursors.DictCursor)
-
-        cursor.execute("""
-        SELECT 
-        p.*,
-        IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
-        pm.id AS media_id,
-        pm.file_url,
-        pm.nombre_original,
-        pm.file_type,
-        (
-            SELECT COUNT(*) 
-            FROM comentarios c 
-            WHERE c.post_id = p.id
-        ) AS total_comentarios
-        FROM posts p
-        LEFT JOIN usuarios u ON p.user_id = u.id
-        LEFT JOIN post_media pm ON p.id = pm.post_id
-        ORDER BY p.created_at DESC
-        LIMIT %s OFFSET %s;
-        """, (POSTS_POR_PAGINA, offset))
-        resultados = cursor.fetchall()
-        posts = preparar_posts(resultados)
-
-        cursor.execute("SELECT COUNT(*) as total FROM posts")
-        total_posts = cursor.fetchone()['total']
-        total_paginas = (total_posts + POSTS_POR_PAGINA - 1) // POSTS_POR_PAGINA
-        paginas = generar_paginas(pagina, total_paginas)
-
-    except Exception as e:
-        posts = []
+        resultado, paginas = obtener_datos_paginados(
+            cursor,
+            consulta_datos="""
+                SELECT 
+                p.*,
+                IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
+                pm.id AS media_id,
+                pm.file_url,
+                pm.nombre_original,
+                pm.file_type,
+                (
+                    SELECT COUNT(*) 
+                    FROM comentarios c 
+                    WHERE c.post_id = p.id
+                ) AS total_comentarios
+                FROM posts p
+                LEFT JOIN usuarios u ON p.user_id = u.id
+                LEFT JOIN post_media pm ON p.id = pm.post_id
+                ORDER BY p.created_at DESC
+                LIMIT %s OFFSET %s
+            """,
+            consulta_total="SELECT COUNT(*) as total FROM posts",
+            params_datos=(),
+            params_total=(),
+            pagina=pagina
+        )
+        posts = preparar_posts(resultado)
     finally:
         cursor.close()
         conexion.close()
     return render_template(
         'index.html',
         posts=posts,
-        user_id=session.get('user_id'),
-        user_name=session.get('user_name'),
-        titulo="Inicio",
         paginas=paginas,
+        user_id=session.get('user_id'),
+        titulo="Inicio",
     )
 
 @app.route('/auth', methods=['GET', 'POST'])
@@ -575,33 +591,34 @@ def perfil():
         datos_personales = cursor.fetchone()
 
         pagina = request.args.get('pagina', 1, type=int)
-        offset = (pagina - 1) * POSTS_POR_PAGINA
-        cursor.execute("""
-        SELECT 
-        p.*,
-        IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
-        pm.id AS media_id,
-        pm.file_url,
-        pm.nombre_original,
-        pm.file_type,
-        (
-            SELECT COUNT(*) 
-            FROM comentarios c 
-            WHERE c.post_id = p.id
-        ) AS total_comentarios
-        FROM posts p
-        LEFT JOIN usuarios u ON p.user_id = u.id
-        LEFT JOIN post_media pm ON p.id = pm.post_id
-        WHERE user_id = %s
-        ORDER BY p.created_at DESC
-        LIMIT %s OFFSET %s;
-        """, (session['user_id'] ,POSTS_POR_PAGINA, offset))
-        resultados = cursor.fetchall()
-        posts = preparar_posts(resultados)
-        cursor.execute("SELECT COUNT(*) as total FROM posts WHERE user_id = %s", session['user_id'])
-        total_posts = cursor.fetchone()['total']
-        total_paginas = (total_posts + POSTS_POR_PAGINA - 1) // POSTS_POR_PAGINA
-        paginas = generar_paginas(pagina, total_paginas)
+        resultado, paginas = obtener_datos_paginados(
+            cursor,
+            consulta_datos="""
+                SELECT 
+                p.*,
+                IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
+                pm.id AS media_id,
+                pm.file_url,
+                pm.nombre_original,
+                pm.file_type,
+                (
+                    SELECT COUNT(*) 
+                    FROM comentarios c 
+                    WHERE c.post_id = p.id
+                ) AS total_comentarios
+                FROM posts p
+                LEFT JOIN usuarios u ON p.user_id = u.id
+                LEFT JOIN post_media pm ON p.id = pm.post_id
+                WHERE user_id = %s
+                ORDER BY p.created_at DESC
+                LIMIT %s OFFSET %s
+            """,
+            consulta_total="SELECT COUNT(*) as total FROM posts WHERE user_id = %s",
+            params_datos=(session.get('user_id'),),
+            params_total=(session.get('user_id'),),
+            pagina=pagina
+        )
+        posts = preparar_posts(resultado)
     finally:
         cursor.close()
         conexion.close()
