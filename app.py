@@ -745,6 +745,7 @@ def visualizar_post(post_id):
 
         post = {
             'id': resultados[0]['id'],
+            'user_id': resultados[0]['user_id'],
             'titulo': resultados[0]['titulo'],
             'contenido': resultados[0]['contenido'],
             'autor_nombre': resultados[0]['autor_nombre'],
