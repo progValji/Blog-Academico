@@ -246,33 +246,26 @@ def salvar_comentario(comentario_id = None, post_id = None):
         cursor.close()
         conexion.close()
 
-def preparar_posts(resultados):
+def extraer_archivo(fila):
+    return {
+            'id': fila['media_id'],
+            'ruta_archivo': fila['file_url'],
+            'nombre_original': fila['nombre_original'],
+            'tipo_archivo': fila['file_type']
+        }
+
+def agrupar_filas_posts(resultados):
+    """Agrupa filas duplicadas por post_id y consolida sus archivos adjuntos."""
     posts_dict = {}
     for fila in resultados:
-            post_id = fila['id']
+        post_id = fila['id']
 
-            if post_id not in posts_dict:
-                posts_dict[post_id] = {
-                    'id': fila['id'],
-                    'user_id': fila['user_id'],
-                    'titulo': fila['titulo'],
-                    'contenido': fila['contenido'],
-                    'autor_nombre': fila['autor_nombre'],
-                    'created_at': fila['created_at'],
-                    'archivos': []
-                }
+        if post_id not in posts_dict:
+            posts_dict[post_id] = dict(fila)  # El resultado ya trae todos los campos
+            posts_dict[post_id]['archivos'] = []
 
-            if 'total_comentarios' in fila and fila['total_comentarios'] is not None:
-                posts_dict[post_id]['total_comentarios'] = fila['total_comentarios']
-
-            if fila['media_id']:
-                posts_dict[post_id]['archivos'].append({
-                    'id': fila['media_id'],
-                    'ruta_archivo': fila['file_url'],
-                    'nombre_original': fila['nombre_original'],
-                    'tipo_archivo': fila['file_type']
-                })
-
+        if fila.get('media_id'):
+            posts_dict[post_id]['archivos'].append(extraer_archivo(fila))
     return list(posts_dict.values())
 
 def obtener_datos_paginados(cursor, consulta_datos, consulta_total, params_datos=(),
@@ -350,7 +343,7 @@ def index():
         resultado, paginas = obtener_datos_paginados(
             cursor,
             consulta_datos="""
-                SELECT 
+            SELECT 
                 p.*,
                 IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
                 pm.id AS media_id,
@@ -362,18 +355,21 @@ def index():
                     FROM comentarios c 
                     WHERE c.post_id = p.id
                 ) AS total_comentarios
-                FROM posts p
-                LEFT JOIN usuarios u ON p.user_id = u.id
-                LEFT JOIN post_media pm ON p.id = pm.post_id
-                ORDER BY p.created_at DESC
+            FROM (
+                SELECT * FROM posts
+                ORDER BY created_at DESC
                 LIMIT %s OFFSET %s
+            ) p
+            LEFT JOIN usuarios u ON p.user_id = u.id
+            LEFT JOIN post_media pm ON p.id = pm.post_id
+            ORDER BY p.created_at DESC
             """,
             consulta_total="SELECT COUNT(*) as total FROM posts",
             params_datos=(),
             params_total=(),
             pagina=pagina
         )
-        posts = preparar_posts(resultado)
+        posts = agrupar_filas_posts(resultado)
     finally:
         cursor.close()
         conexion.close()
@@ -596,7 +592,7 @@ def perfil():
         resultado, paginas = obtener_datos_paginados(
             cursor,
             consulta_datos="""
-                SELECT 
+            SELECT 
                 p.*,
                 IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
                 pm.id AS media_id,
@@ -608,19 +604,22 @@ def perfil():
                     FROM comentarios c 
                     WHERE c.post_id = p.id
                 ) AS total_comentarios
-                FROM posts p
-                LEFT JOIN usuarios u ON p.user_id = u.id
-                LEFT JOIN post_media pm ON p.id = pm.post_id
+            FROM (
+                SELECT * FROM posts
                 WHERE user_id = %s
-                ORDER BY p.created_at DESC
+                ORDER BY created_at DESC
                 LIMIT %s OFFSET %s
+            ) p
+            LEFT JOIN usuarios u ON p.user_id = u.id
+            LEFT JOIN post_media pm ON p.id = pm.post_id
+            ORDER BY p.created_at DESC
             """,
             consulta_total="SELECT COUNT(*) as total FROM posts WHERE user_id = %s",
             params_datos=(session.get('user_id'),),
             params_total=(session.get('user_id'),),
             pagina=pagina
         )
-        posts = preparar_posts(resultado)
+        posts = agrupar_filas_posts(resultado)
 
         comentarios, paginas_comentarios = obtener_datos_paginados(
             cursor,
@@ -790,14 +789,7 @@ def visualizar_post(post_id):
             'archivos': []
         }
 
-        for fila in resultados:
-            if fila['media_id'] is not None:
-                post['archivos'].append({
-                    'id': fila['media_id'],
-                    'ruta_archivo': fila['file_url'],
-                    'nombre_original': fila['nombre_original'],
-                    'tipo_archivo': fila['file_type']
-                })
+        post['archivos'] = [extraer_archivo(fila) for fila in resultados if fila.get('media_id')]
 
         cursor.execute("""
         SELECT u.nombre_usuario AS autor, c.contenido, c.created_at, c.user_id, c.id
