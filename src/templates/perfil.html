@@ -90,7 +90,7 @@
     <section>
         <ul>
             {% for post in posts %}
-                {{ render_post_card(post, user_id, true) }}
+                {{ render_post_card(post, user_id, true, next="perfil") }}
             {% endfor %}
         </ul>
         {% for p in paginas %}

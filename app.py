@@ -833,6 +833,7 @@ def editar_post(post_id):
 def eliminar_post(post_id):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
+    next_page = request.args.get('next', 'index')
     try:
         borrar_archivos(post_id)
         cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
@@ -843,7 +844,7 @@ def eliminar_post(post_id):
     finally:
         cursor.close()
         conexion.close()
-    return redirect(url_for('index'))
+    return redirect(url_for(next_page))
 
 @app.route('/eliminar_comentario/<int:comentario_id>', methods=['POST'])
 def eliminar_comentario(comentario_id):
