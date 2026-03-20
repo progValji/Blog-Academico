@@ -20,7 +20,7 @@
 </style>
 {% extends "base.html" %}
 {% from "macros/_post_card.html" import render_post_card %}
-
+{% from "macros/_comentario.html" import render_comentario %}
 {% block contenido %}
     <h1>Perfil</h1>
 
@@ -106,7 +106,20 @@
 
     <section>
         <h2>Tus comentarios</h2>
-
+        <ul>
+            {% for comentario in comentarios %}
+                {{ render_comentario(comentario, user_id, true) }}
+            {% endfor %}
+        </ul>
+        {% for p in paginas_comentario %}
+                {% if p == "..." %}
+                    <span>...</span>
+                {% elif p == pagina %}
+                    <strong>{{ p }}</strong>
+                {% else %}
+                    <a href="{{ url_for('perfil', pagina=p) }}">{{ p }}</a>
+                {% endif %}
+        {% endfor %}
     </section>
 
     <script>

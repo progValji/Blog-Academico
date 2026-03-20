@@ -1,4 +1,4 @@
-{% macro render_comentario(comentario, user_id) %}
+{% macro render_comentario(comentario, user_id, mostrar_link_post=None) %}
     <li class="comentario-item">
         {% if comentario.user_id == user_id %}
             <div class="dropdown">
@@ -35,5 +35,9 @@
         <strong>{{ comentario.autor }}</strong> dice:
         <p>{{ comentario.created_at | tiempo_relativo}}</p>
         <p>{{ comentario.contenido | safe }}</p>
+
+        {% if mostrar_link_post %}
+            <a href="{{ url_for('visualizar_post', post_id=comentario.post_id) }}">Ver post</a>
+        {% endif %}
     </li>
 {% endmacro %}

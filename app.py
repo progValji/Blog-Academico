@@ -258,10 +258,12 @@ def preparar_posts(resultados):
                     'titulo': fila['titulo'],
                     'contenido': fila['contenido'],
                     'autor_nombre': fila['autor_nombre'],
-                    'total_comentarios': fila['total_comentarios'],
                     'created_at': fila['created_at'],
                     'archivos': []
                 }
+
+            if 'total_comentarios' in fila and fila['total_comentarios'] is not None:
+                posts_dict[post_id]['total_comentarios'] = fila['total_comentarios']
 
             if fila['media_id']:
                 posts_dict[post_id]['archivos'].append({
@@ -582,6 +584,7 @@ def restablecer_contraseña(token):
 def perfil():
     conexion = obtener_conexion()
     cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    pagina = request.args.get('pagina', 1, type=int)
     try:
         cursor.execute("""
             SELECT nombre_usuario, correo, creado_en
@@ -590,7 +593,6 @@ def perfil():
         """, (session['user_id'],))
         datos_personales = cursor.fetchone()
 
-        pagina = request.args.get('pagina', 1, type=int)
         resultado, paginas = obtener_datos_paginados(
             cursor,
             consulta_datos="""
@@ -619,6 +621,22 @@ def perfil():
             pagina=pagina
         )
         posts = preparar_posts(resultado)
+
+        comentarios, paginas_comentarios = obtener_datos_paginados(
+            cursor,
+            consulta_datos="""
+                select c.id, c.post_id, c.user_id, u.nombre_usuario AS autor, c.contenido, c.created_at
+                from comentarios c
+                INNER JOIN usuarios u ON c.user_id = u.id
+                where c.user_id = %s
+                order by c.created_at DESC 
+                limit %s offset %s
+            """,
+            consulta_total="select count(*) as total from comentarios c where c.user_id = %s",
+            params_datos=(session.get('user_id'),),
+            params_total=(session.get('user_id'),),
+            pagina=pagina
+        )
     finally:
         cursor.close()
         conexion.close()
@@ -628,6 +646,8 @@ def perfil():
                             datos_personales= datos_personales,
                             posts = posts,
                             paginas=paginas,
+                            comentarios=comentarios,
+                            paginas_comentario=paginas_comentarios,
                             titulo="Perfil")
 
 @app.route('/editar_perfil', methods=['POST'])
