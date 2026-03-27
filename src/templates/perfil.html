@@ -24,116 +24,139 @@
 {% block contenido %}
     <h1>Perfil</h1>
 
-    <div>
-        <button>Mis datos</button>
-        <button>Mis posts</button>
-        <button>Mis comentarios</button>
+    <div id="btns">
+        <button id="btns__datos">Mis datos</button>
+        <button id="btns__posts">Mis posts</button>
+        <button id="btns__comentarios">Mis comentarios</button>
     </div>
 
-    <section>
-        <h2>Hola {{ datos_personales.nombre_usuario }}</h2>
-        <p>Correo: {{ datos_personales.correo }}</p>
-        <p>Creado el: {{ datos_personales.creado_en | tiempo_relativo }}</p>
-        <hr>
+    <section id="secciones">
+        <section id="secciones__datos">
+            <section>
 
-        <!-- Formulario 1: Información básica -->
-        <section id="editar-perfil">
-            <h2>Editar Perfil</h2>
-            <form method="POST" action="{{ url_for('editar_perfil') }}">
-                <div class="input__formulario">
-                    <label for="nombre_usuario">Nombre de Usuario:</label>
-                    <input type="text" id="nombre_usuario" name="nombre_usuario"
-                    value="{{ datos_personales.nombre_usuario }}" required minlength="2">
-                    <span></span>
+                <h2>Hola {{ datos_personales.nombre_usuario }}</h2>
+                <p>Correo: {{ datos_personales.correo }}</p>
+                <p>Creado el: {{ datos_personales.creado_en | tiempo_relativo }}</p>
+                <hr>
+        
+                <!-- Formulario 1: Información básica -->
+                <section id="editar-perfil">
+                    <h2>Editar Perfil</h2>
+                    <form method="POST" action="{{ url_for('editar_perfil') }}">
+                        <div class="input__formulario">
+                            <label for="nombre_usuario">Nombre de Usuario:</label>
+                            <input type="text" id="nombre_usuario" name="nombre_usuario"
+                            value="{{ datos_personales.nombre_usuario }}" required minlength="2">
+                            <span></span>
+                        </div>
+                        <div class="input__formulario">
+                            <label for="correo">Correo:</label>
+                            <input type="email" id="correo" name="correo"
+                            value="{{ datos_personales.correo }}" required>
+                            <span></span>
+                        </div>
+                        <button type="submit">Guardar Cambios</button>
+                    </form>
+                </section>
+        
+                <hr>
+        
+                <!-- Formulario 2: Cambiar contraseña -->
+                <section id="cambiar-contrasena">
+                    <h2>Cambiar Contraseña</h2>
+                    <form method="POST" action="{{ url_for('cambiar_contrasena') }}">
+                        <div class="input__formulario">
+                            <label for="contrasena_actual">Contraseña Actual:</label>
+                            <input type="password" id="contrasena_actual" name="contrasena_actual"
+                            required minlength="8">
+                            <button type="button" class="tooglePassword" data-visible="false">👁️</button>
+                            <span></span>
+                        </div>
+                        <div class="input__formulario">
+                            <label for="nueva_contrasena">Nueva Contraseña</label>
+                            <input type="password" id="nueva_contrasena" name="nueva_contrasena"
+                            required minlength="8">
+                            <button type="button" class="tooglePassword" data-visible="false">👁️</button>
+                            <span></span>
+                        </div>
+                        <div class="input__formulario">
+                            <label for="confirmar_contrasena">Confirmar Nueva Contraseña</label>
+                            <input type="password" id="confirmar_contrasena" name="confirmar_contrasena"
+                            required minlength="8">
+                            <button type="button" class="tooglePassword" data-visible="false">👁️</button>
+                            <span></span>
+                        </div>
+                        <button type="submit">Cambiar Contraseña</button>
+                    </form>
+                </section>
+        
+                <hr>
+        
+                <div>
+                    <a href="{{ url_for('cerrar_sesion') }}">Cerrar Sesión</a>
+                    <button
+                        type="button"
+                        data-title="¿Estás seguro de eliminar de forma permanente esta cuenta?"
+                        data-message="Esta acción no se puede deshacer."
+                        data-action="/eliminar_cuenta/{{ user_id }}"
+                        class="open_delete_modal">
+                    Eliminar Cuenta</button>
                 </div>
-                <div class="input__formulario">
-                    <label for="correo">Correo:</label>
-                    <input type="email" id="correo" name="correo"
-                    value="{{ datos_personales.correo }}" required>
-                    <span></span>
-                </div>
-                <button type="submit">Guardar Cambios</button>
-            </form>
+            </section>
         </section>
-
-        <hr>
-
-        <!-- Formulario 2: Cambiar contraseña -->
-        <section id="cambiar-contrasena">
-            <h2>Cambiar Contraseña</h2>
-            <form method="POST" action="{{ url_for('cambiar_contrasena') }}">
-                <div class="input__formulario">
-                    <label for="contrasena_actual">Contraseña Actual:</label>
-                    <input type="password" id="contrasena_actual" name="contrasena_actual"
-                    required minlength="8">
-                    <button type="button" class="tooglePassword" data-visible="false">👁️</button>
-                    <span></span>
-                </div>
-                <div class="input__formulario">
-                    <label for="nueva_contrasena">Nueva Contraseña</label>
-                    <input type="password" id="nueva_contrasena" name="nueva_contrasena"
-                    required minlength="8">
-                    <button type="button" class="tooglePassword" data-visible="false">👁️</button>
-                    <span></span>
-                </div>
-                <div class="input__formulario">
-                    <label for="confirmar_contrasena">Confirmar Nueva Contraseña</label>
-                    <input type="password" id="confirmar_contrasena" name="confirmar_contrasena"
-                    required minlength="8">
-                    <button type="button" class="tooglePassword" data-visible="false">👁️</button>
-                    <span></span>
-                </div>
-                <button type="submit">Cambiar Contraseña</button>
-            </form>
+    
+        <section id="secciones__posts">
+            <section>
+                {% if posts %}
+                    <ul>
+                        {% for post in posts %}
+                            {{ render_post_card(post, user_id, True,
+                                next_url_editar=url_for('perfil', seccion='posts'),
+                                next_url_eliminar=url_for('perfil', seccion='posts')) 
+                            }}   
+                        {% endfor %}
+                    </ul>
+                    {% for p in paginas %}
+                            {% if p == "..." %}
+                                <span>...</span>
+                            {% elif p == pagina %}
+                                <strong>{{ p }}</strong>
+                            {% else %}
+                                <a href="{{ url_for('perfil', pagina=p, seccion='posts') }}">{{ p }}</a>
+                            {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p>Aun no tienes posts</p>
+                    <a href="{{ url_for('crear_post') }}">Crea tu primer post</a>
+                {% endif %}
+            </section>
         </section>
-
-        <hr>
-
-        <div>
-            <a href="{{ url_for('cerrar_sesion') }}">Cerrar Sesión</a>
-            <button
-                type="button"
-                data-title="¿Estás seguro de eliminar de forma permanente esta cuenta?"
-                data-message="Esta acción no se puede deshacer."
-                data-action="/eliminar_cuenta/{{ user_id }}"
-                class="open_delete_modal">
-            Eliminar Cuenta</button>
-        </div>
-    </section>
-
-    <section>
-        <ul>
-            {% for post in posts %}
-                {{ render_post_card(post, user_id, true, next="perfil") }}
-            {% endfor %}
-        </ul>
-        {% for p in paginas %}
-                {% if p == "..." %}
-                    <span>...</span>
-                {% elif p == pagina %}
-                    <strong>{{ p }}</strong>
+    
+        <section id="secciones__comentarios">
+            <section>
+                {% if comentarios %}
+                    <h2>Tus comentarios</h2>
+                    <ul>
+                        {% for comentario in comentarios %}
+                            {{ render_comentario(comentario, user_id, true, "perfil") }}
+                        {% endfor %}
+                    </ul>
+                    {% for p in paginas_comentario %}
+                            {% if p == "..." %}
+                                <span>...</span>
+                            {% elif p == pagina %}
+                                <strong>{{ p }}</strong>
+                            {% else %}
+                                <a href="{{ url_for('perfil', pagina=p, seccion='comentarios') }}">
+                                    {{ p }}</a>
+                            {% endif %}
+                    {% endfor %}
                 {% else %}
-                    <a href="{{ url_for('perfil', pagina=p) }}">{{ p }}</a>
+                    <p>No has hecho ningun comentario</p>
+                    <a href="{{ url_for('index') }}">Ve al inicio y comenta algunos posts</a>
                 {% endif %}
-        {% endfor %}
-    </section>
-
-    <section>
-        <h2>Tus comentarios</h2>
-        <ul>
-            {% for comentario in comentarios %}
-                {{ render_comentario(comentario, user_id, true) }}
-            {% endfor %}
-        </ul>
-        {% for p in paginas_comentario %}
-                {% if p == "..." %}
-                    <span>...</span>
-                {% elif p == pagina %}
-                    <strong>{{ p }}</strong>
-                {% else %}
-                    <a href="{{ url_for('perfil', pagina=p) }}">{{ p }}</a>
-                {% endif %}
-        {% endfor %}
+            </section>
+        </section>
     </section>
 
     <script>
@@ -155,4 +178,33 @@
     </script>
 
     <script src="{{ url_for('static', filename='JS/tooglePassword.js') }}"></script>
+
+    <script>
+        const btns = document.getElementById("btns");
+        const secciones = {
+            datos: document.getElementById("secciones__datos"),
+            posts: document.getElementById("secciones__posts"),
+            comentarios: document.getElementById("secciones__comentarios")
+        };
+
+        // Lee la sección desde la URL o usa "datos" por defecto
+        const seccionInicial = "{{ seccion }}";
+        // Vista predeterminada
+        mostrarSeccion(seccionInicial);
+
+        btns.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[id^='btns__']");
+        if (!btn) return;
+
+        // Extrae la sección del id: "btns__posts" → "posts"
+        const seccion = btn.id.split("__")[1];
+        mostrarSeccion(seccion);
+        });
+
+        function mostrarSeccion(activa) {
+            Object.entries(secciones).forEach(([nombre, el]) => {
+                el.hidden = nombre !== activa;
+            });
+        }
+    </script>
 {% endblock %}

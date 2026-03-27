@@ -1,4 +1,4 @@
-{% macro render_comentario(comentario, user_id, mostrar_link_post=None) %}
+{% macro render_comentario(comentario, user_id, mostrar_link_post=None, next='visualizar_post') %}
     <li class="comentario-item">
         {% if comentario.user_id == user_id %}
             <div class="dropdown">
@@ -24,7 +24,7 @@
                             type="button"
                             data-title="¿Estas seguro de eliminar este comentario?"
                             data-message="Esta acción no se puede deshacer."
-                            data-action="/eliminar_comentario/{{ comentario.id }}"
+                            data-action="/eliminar_comentario/{{ comentario.id }}?next={{ next }}"
                             class="open_delete_modal">
                             Eliminar comentario
                         </button>

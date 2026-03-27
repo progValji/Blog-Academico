@@ -581,6 +581,7 @@ def perfil():
     conexion = obtener_conexion()
     cursor = conexion.cursor(pymysql.cursors.DictCursor)
     pagina = request.args.get('pagina', 1, type=int)
+    seccion = request.args.get('seccion', 'datos')
     try:
         cursor.execute("""
             SELECT nombre_usuario, correo, creado_en
@@ -641,12 +642,13 @@ def perfil():
         conexion.close()
 
     return render_template('perfil.html',
-                           user_id = session['user_id'],
+                            user_id = session['user_id'],
                             datos_personales= datos_personales,
                             posts = posts,
                             paginas=paginas,
                             comentarios=comentarios,
                             paginas_comentario=paginas_comentarios,
+                            seccion=seccion,
                             titulo="Perfil")
 
 @app.route('/editar_perfil', methods=['POST'])
@@ -792,9 +794,9 @@ def visualizar_post(post_id):
         resultados = cursor.fetchall()
 
         if not resultados:
-            cursor.close()
-            conexion.close()
-            abort(404)
+            return render_template('visualizar_post.html',
+                                   titulo="Post No Encontrado",
+                                   post=None)
 
         post = {
             'id': resultados[0]['id'],
@@ -841,7 +843,11 @@ def editar_post(post_id):
 
         if post is None: abort(404)
         salvar_post(post_id)
-        return redirect(url_for('index'))
+        next_url_editar = request.form.get('next', '/')
+        if next_url_editar == '/':
+            return redirect(url_for('index'))
+        else:
+            return redirect(next_url_editar)
     finally:
         cursor.close()
         conexion.close()
@@ -850,23 +856,27 @@ def editar_post(post_id):
 def eliminar_post(post_id):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
-    next_page = request.args.get('next', 'index')
     try:
         borrar_archivos(post_id)
         cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
         conexion.commit()
         flash('Post borrado con exito', 'success')
+        next_url_eliminar = request.form.get('next', '/')
+        if next_url_eliminar == '/':
+            return redirect(url_for('index'))
+        else:
+            return redirect(next_url_eliminar)
     except:
         flash('Ocurrió un error al borrar el post. Inténtalo de nuevo.', 'error')
     finally:
         cursor.close()
         conexion.close()
-    return redirect(url_for(next_page))
 
 @app.route('/eliminar_comentario/<int:comentario_id>', methods=['POST'])
 def eliminar_comentario(comentario_id):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
+    next_page = request.args.get('next', 'visualizar_post')
 
     try:
         cursor.execute("SELECT post_id FROM comentarios WHERE id = %s", (comentario_id,))
@@ -887,7 +897,7 @@ def eliminar_comentario(comentario_id):
     finally:
         cursor.close()
         conexion.close()
-    return redirect(url_for('visualizar_post', post_id=post_id))
+    return redirect(url_for(next_page, post_id=post_id))
 
 @app.route('/agregar_comentario/<int:post_id>', methods=['POST'])
 def agregar_comentario(post_id):

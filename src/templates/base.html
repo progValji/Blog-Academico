@@ -56,6 +56,7 @@
             <div class="confirm_modal-buttons">
                 <button id="confirm_modal_cancel">Cancelar</button>
                 <form id="confirm_modal_form" method="POST">
+                    <input type="hidden" name="next" value="{{ request.path }}">
                     <button type="submit" id="confirm_modal_confirm">Confirmar</button>
                 </form>
             </div>
@@ -69,11 +70,12 @@
     <script>
         const confirmModal = document.getElementById('confirm_modal');
 
-        function openConfirmModal({ title, message, confirmText, action }) {
+        function openConfirmModal({ title, message, confirmText, action, next_url }) {
             document.getElementById('confirm_modal_title').textContent = title;
             document.getElementById('confirm_modal_message').textContent = message;
             document.getElementById('confirm_modal_confirm').textContent = confirmText || 'Confirmar';
             document.getElementById('confirm_modal_form').action = action;
+            document.getElementById('confirm_modal_form').querySelector('input[name="next"]').value = next_url || '{{ request.path }}';
             confirmModal.showModal();
         };
 
@@ -83,7 +85,8 @@
                     title: this.dataset.title,
                     message: this.dataset.message,
                     confirmText: 'Eliminar',
-                    action: this.dataset.action
+                    action: this.dataset.action,
+                    next_url: this.dataset.nextUrl
                 });
             });
         });

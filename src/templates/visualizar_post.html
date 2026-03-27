@@ -22,43 +22,49 @@
 {% from "macros/_post_card.html" import render_post_card %}
 
 {% block contenido %}
-    {{ render_post_card(post, user_id) }}
 
-    <section class="comentarios">
-        <h2>Comentarios</h2>
-        <ul>
-            {% for comentario in comentarios %}
-                {{ render_comentario(comentario, user_id) }}
-            {% else %}
-                <p>Sé el primero en comentar.</p>
-            {% endfor %}
-        </ul>
-        <div>
-            <h3>Deja un comentario</h3>
-            <form action="{{ url_for('agregar_comentario', post_id=post.id) }}" method="post">
-                {% if session.get('user_id') %}
-                <div class="form-group">
-                    <label for="texto">Comentario</label>
-                    <textarea name="texto" rows="4" required class="form-control"></textarea>
-                </div>
-                <button type="submit" class="btn">Enviar Comentario</button>
+    {% if post %}
+        {{ render_post_card(post, user_id, next_url_editar=url_for('visualizar_post', post_id=post.id),
+            next_url_eliminar=url_for('visualizar_post', post_id=post.id)
+        ) }}
+
+        <section class="comentarios">
+            <h2>Comentarios</h2>
+            <ul>
+                {% for comentario in comentarios %}
+                    {{ render_comentario(comentario, user_id) }}
                 {% else %}
-                <div>
-                    <p>Para hacer un comentario, debes estar tener una cuenta</p>
-                </div>
-                {% endif %}
-            </form>
-        </div>
-    </section>
+                    <p>Sé el primero en comentar.</p>
+                {% endfor %}
+            </ul>
+            <div>
+                <h3>Deja un comentario</h3>
+                <form action="{{ url_for('agregar_comentario', post_id=post.id) }}" method="post">
+                    {% if session.get('user_id') %}
+                    <div class="form-group">
+                        <label for="texto">Comentario</label>
+                        <textarea name="texto" rows="4" required class="form-control"></textarea>
+                    </div>
+                    <button type="submit" class="btn">Enviar Comentario</button>
+                    {% else %}
+                    <div>
+                        <p>Para hacer un comentario, debes estar tener una cuenta</p>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </section>
 
-    <script>
-        document.querySelectorAll('.dropdown-btn').forEach(function(button) {
-            button.addEventListener('click', function() {
-                console.log('aaa')
-                const dropdown = this.closest('.dropdown');
-                const menu = dropdown.querySelector('.dropdown-content');
-                menu.classList.toggle('show');
+        <script>
+            document.querySelectorAll('.dropdown-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const dropdown = this.closest('.dropdown');
+                    const menu = dropdown.querySelector('.dropdown-content');
+                    menu.classList.toggle('show');
+                });
             });
-        });
-    </script>
+        </script>
+    {% else %}
+        <h1>Parece que has eliminado este post</h1>
+    {% endif %}
 {% endblock %}
