@@ -1,294 +1,42 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
-import pymysql
 import time
-import secrets
 from datetime import datetime, timedelta
-from flask_mail import Mail, Message
+from flask_mail import Mail
 import os
 from dotenv import load_dotenv
 from functools import wraps
-import bleach
-import uuid
+import pymysql
+
+from src.app import (
+    obtener_conexion,
+    enviar_correo,
+    salvar_post,
+    agrupar_filas_posts,
+    salvar_comentario,
+    allowed_file,
+    borrar_archivos,
+    extraer_archivo,
+    generar_token,
+    calcular_retraso_exponencial,
+    limpiar_contenido,
+    generar_paginas,
+    obtener_datos_paginados,
+    MAX_INTENTOS,
+    TIEMPO_BLOQUEADO,
+    TIEMPO_TOKEN,
+    RETRASO_BASE,
+    POSTS_POR_PAGINA,
+    UPLOAD_FOLDER,
+    ALLOWED_EXTENSIONS,
+)
 
 load_dotenv()
-
-#Constantes de seguridad
-MAX_INTENTOS = 5
-TIEMPO_BLOQUEADO = 15 #MINUTOS
-TIEMPO_TOKEN = 1 #hora
-RETRASO_BASE = 2 #SEGUNDOS
-
-#Constantes Normales
-POSTS_POR_PAGINA = 10
-
-# Configuración de subida de archivos
-UPLOAD_FOLDER = os.path.join(
-    os.path.dirname(__file__),
-    'src',
-    'static'
-)
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'xlsx', 'pptx'}
-
-def calcular_retraso_exponencial(intenos_fallidos):
-    if intenos_fallidos == 0: return 0
-    return RETRASO_BASE ** (intenos_fallidos - 1)
-
-def generar_token():
-    return secrets.token_urlsafe(32)
-
-def obtener_conexion():
-    return pymysql.connect(
-        host=os.getenv('DATABASE_HOST'),
-        user=os.getenv('DATABASE_USER'),
-        password=os.getenv('DATABASE_PASSWORD'),
-        database=os.getenv('DATABASE_NAME')
-    )
-
-def enviar_correo(nombre, token, correo):
-    mail = Mail(app)
-    enlace_recuperacion = f'http://localhost:5000/restablecer_contraseña/{token}'
-    msg = Message(
-        subject='Recuperación de contraseña - Blog Académico',
-        recipients=[correo],
-        html=f"""
-        <h2>Hola {nombre},</h2>
-        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-        <p><a href="{enlace_recuperacion}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-            Restablecer Contraseña
-        </a></p>
-        <p>Este enlace expira en 1 hora.</p>
-        <p>Si no solicitaste esto, ignora este mensaje.</p>
-        """
-    )
-    mail.send(msg)
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def limpiar_contenido(contenido):
-    allowed_tags = ['b', 'i', 'u', 'p', 'br', 'a']
-    allowed_attributes = {
-        'a': ['href', 'title', 'rel', 'target']
-    }
-
-    contenido_limpio = bleach.clean(
-        contenido,
-        tags=allowed_tags,
-        attributes=allowed_attributes,
-        protocols=['http', 'https'],
-        strip=True
-    )
-
-    def set_target_blank(attrs, new=False):
-        attrs[(None, "target")] = "_blank"
-        attrs[(None, "rel")] = "noopener noreferrer"
-        return attrs
-            
-    resultado = bleach.linkify(contenido_limpio, callbacks=[set_target_blank])
-    return resultado
-
-def generar_paginas(pagina_actual, total_paginas, rango=2):
-    paginas = []
-
-    for p in range(1, total_paginas + 1):
-        if (
-            p == 1 or
-            p == total_paginas or
-            abs(p - pagina_actual) <= rango
-        ):
-            paginas.append(p)
-        elif paginas and paginas[-1] != "...":
-            paginas.append("...")
-
-    return paginas
 
 app = Flask(__name__, 
             template_folder=os.path.join('src', 'templates'),
             static_folder='src/static',
             static_url_path='/static')
-
-def borrar_archivos(id):
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
-    try:
-        cursor.execute("SELECT file_url FROM post_media WHERE post_id = %s", (id, ))
-        archivos = cursor.fetchall()
-
-        if not archivos:
-            return
-
-        for archivo in archivos:
-            file_url = archivo[0]
-            
-            ruta_archivo = os.path.join(
-                app.config['UPLOAD_FOLDER'],
-                "uploads/posts",
-                os.path.basename(file_url)
-            )
-
-            if os.path.exists(ruta_archivo):
-                os.remove(ruta_archivo)
-    except Exception as e:
-        print('Error: ', e)
-    finally:
-        cursor.close()
-        conexion.close()
-
-def salvar_post(post_id=None): # Recibe el ID si es edición, None si es creación
-    titulo = request.form.get('titulo', '').strip()
-    contenido = request.form.get('contenido')
-    files = request.files.getlist('adjuntos')
-
-    if not titulo or not contenido:
-        flash('El título y el contenido no pueden estar vacíos.', 'error')
-        return redirect(request.url)
-    
-    try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
-        resultado = limpiar_contenido(contenido)
-
-        if post_id:
-            conservar_ids = request.form.getlist('adjuntos_conservar')
-            conservar_ids = [int(id) for id in conservar_ids]
-
-            cursor.execute("SELECT id, file_url FROM post_media WHERE post_id = %s", (post_id,))
-            adjuntos_actuales = cursor.fetchall()
-
-            # Comparar: los que están en BD pero NO en conservar → eliminar
-            for adjunto in adjuntos_actuales:
-                if adjunto[0] not in conservar_ids:
-                    ruta_completa = os.path.join(app.config['UPLOAD_FOLDER'], adjunto[1])
-                    if os.path.exists(ruta_completa):
-                        os.remove(ruta_completa)
-                    cursor.execute("DELETE FROM post_media WHERE id = %s", (adjunto[0],))
-                    conexion.commit()
-                    # 2. Borrar el registro de la BD
-                    #db.session.delete(adjunto), algo asi
-
-        saved_files = []
-        for file in files:
-            if file and file.filename != '' and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                extension = filename.rsplit('.', 1)[1].lower()
-                unique_name = f"{uuid.uuid4()}.{extension}"
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'uploads', 'posts' ,unique_name)
-                file.save(filepath)
-                relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
-                saved_files.append((relative_path, file.mimetype or extension, filename))
-
-        if post_id:
-            sql = """
-                UPDATE posts 
-                SET titulo = %s, contenido = %s 
-                WHERE id = %s AND user_id = %s
-            """
-            cursor.execute(sql, (titulo, resultado, post_id, session['user_id']))
-            mensaje = '¡Post actualizado!'
-        else:
-            sql = """
-                INSERT INTO posts (user_id, titulo, contenido, created_at)
-                VALUES (%s, %s, %s, %s)
-            """
-            cursor.execute(sql, (session['user_id'], titulo, resultado, datetime.now()))
-            post_id = cursor.lastrowid
-            mensaje = '¡Post creado!'
-
-        if saved_files:
-            media_sql = """
-                INSERT INTO post_media (post_id, file_url, file_type, nombre_original)
-                VALUES (%s, %s, %s, %s)
-            """
-            media_params = [(post_id, path, ftype, name) for path, ftype, name in saved_files]
-            cursor.executemany(media_sql, media_params)
-        
-        conexion.commit()
-        flash(mensaje, 'success')
-    except Exception as e:
-        conexion.rollback() 
-        flash(f'Ocurrió un error: {str(e)}', 'error')
-    finally:
-        cursor.close()
-        conexion.close()
-
-# Recibe comentario_id si es edicion, None si es creacion
-def salvar_comentario(comentario_id = None, post_id = None):
-    texto = request.form.get('texto', '').strip()
-
-    if not texto:
-        flash('El comentario no puede estar vacío.', 'error')
-        return redirect(url_for('visualizar_post', post_id=post_id))
-
-    texto_limpio = limpiar_contenido(texto)
-    try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
-
-        if comentario_id:
-            cursor.execute("""
-                UPDATE comentarios
-                SET contenido = %s
-                WHERE id = %s
-                """, (texto_limpio, comentario_id))
-        else:
-            user_id = session.get('user_id')
-            cursor.execute("""
-                INSERT INTO comentarios (post_id, user_id, contenido, created_at)
-                VALUES (%s, %s, %s, %s)
-            """, (post_id, user_id, texto_limpio, datetime.now()))
-        conexion.commit()
-    except Exception as e:
-        flash('Ocurrió un error al agregar el comentario.', 'error')
-    finally:
-        cursor.close()
-        conexion.close()
-
-def extraer_archivo(fila):
-    return {
-            'id': fila['media_id'],
-            'ruta_archivo': fila['file_url'],
-            'nombre_original': fila['nombre_original'],
-            'tipo_archivo': fila['file_type']
-        }
-
-def agrupar_filas_posts(resultados):
-    """Agrupa filas duplicadas por post_id y consolida sus archivos adjuntos."""
-    posts_dict = {}
-    for fila in resultados:
-        post_id = fila['id']
-
-        if post_id not in posts_dict:
-            posts_dict[post_id] = dict(fila)  # El resultado ya trae todos los campos
-            posts_dict[post_id]['archivos'] = []
-
-        if fila.get('media_id'):
-            posts_dict[post_id]['archivos'].append(extraer_archivo(fila))
-    return list(posts_dict.values())
-
-def obtener_datos_paginados(cursor, consulta_datos, consulta_total, params_datos=(),
-                            params_total=(), pagina=None):
-    """
-    Ejecuta una consulta paginada y devuelve los resultados junto con la metadata de paginacion.
-    
-    - consulta_datos: SELECT principal con placeholders para (%s, %s) al final (LIMIT y OFFSET)
-    - consulta_total: SELECT COUNT(*) para obtener el total
-    - params_datos: tupla de parametros para consulta_datos (sin LIMIT ni OFFSET, se agregan aqui)
-    - params_total: tupla de parametros para consulta_total
-    - pagina: numero de pagina actual
-    """
-    offset = (pagina - 1) * POSTS_POR_PAGINA
-    cursor.execute(consulta_total, params_total)
-    total = cursor.fetchone()['total']
-
-    cursor.execute(consulta_datos, (*params_datos, POSTS_POR_PAGINA, offset))
-    resultados = cursor.fetchall()
-
-    total_paginas = (total + POSTS_POR_PAGINA - 1) // POSTS_POR_PAGINA
-    paginas = generar_paginas(pagina, total_paginas)
-    return resultados, paginas
 
 @app.template_filter('tiempo_relativo')
 def tiempo_relativo(fecha):
@@ -509,7 +257,7 @@ def solicitar_recuperacion():
 
                 cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE id = %s', (token, expira_token, usuario_id))
                 conexion.commit()
-                enviar_correo(nombre_usuario, token, correo)
+                enviar_correo(app, nombre_usuario, token, correo)
                 mensaje = 'Se envio un enlace de recuperacion a tu correo'
             else: mensaje = 'Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion'
             cursor.close()
