@@ -42,26 +42,27 @@ Blog Academico/
 ### Core
 - `src/app/__init__.py` - Paquete principal con exports
 - `src/app/config.py` - Configuración global
+- `src/app/helpers/__init__.py` - Paquete de funciones auxiliares
 
 ### Database
-- `src/app/database/__init__.py`
-- `src/app/database/connection.py` - obtener_conexion()
+- `src/app/helpers/database/__init__.py`
+- `src/app/helpers/database/connection.py` - obtener_conexion()
 
 ### Services (Lógica de negocio)
-- `src/app/services/__init__.py`
-- `src/app/services/email_service.py` - enviar_correo()
-- `src/app/services/post_service.py` - salvar_post(), agrupar_filas_posts()
-- `src/app/services/comment_service.py` - salvar_comentario()
+- `src/app/helpers/services/__init__.py`
+- `src/app/helpers/services/email_service.py` - enviar_correo()
+- `src/app/helpers/services/post_service.py` - salvar_post(), agrupar_filas_posts()
+- `src/app/helpers/services/comment_service.py` - salvar_comentario()
 
 ### Storage (Gestión de archivos)
-- `src/app/storage/__init__.py`
-- `src/app/storage/files.py` - allowed_file(), borrar_archivos(), extraer_archivo()
+- `src/app/helpers/storage/__init__.py`
+- `src/app/helpers/storage/files.py` - allowed_file(), borrar_archivos(), extraer_archivo()
 
 ### Utils (Funciones auxiliares)
-- `src/app/utils/__init__.py`
-- `src/app/utils/security.py` - generar_token(), calcular_retraso_exponencial()
-- `src/app/utils/text.py` - limpiar_contenido()
-- `src/app/utils/pagination.py` - generar_paginas(), obtener_datos_paginados()
+- `src/app/helpers/utils/__init__.py`
+- `src/app/helpers/utils/security.py` - generar_token(), calcular_retraso_exponencial()
+- `src/app/helpers/utils/text.py` - limpiar_contenido()
+- `src/app/helpers/utils/pagination.py` - generar_paginas(), obtener_datos_paginados()
 
 ---
 
@@ -83,18 +84,18 @@ Blog Academico/
 
 ### Imports Agregados por Módulo
 
-**database/connection.py**
+**helpers/database/connection.py**
 ```python
 import pymysql, os
 from dotenv import load_dotenv
 ```
 
-**services/email_service.py**
+**helpers/services/email_service.py**
 ```python
 from flask_mail import Mail, Message
 ```
 
-**services/post_service.py**
+**helpers/services/post_service.py**
 ```python
 import os, uuid
 from datetime import datetime
@@ -102,33 +103,33 @@ from flask import request, flash, redirect, session
 from werkzeug.utils import secure_filename
 ```
 
-**services/comment_service.py**
+**helpers/services/comment_service.py**
 ```python
 from datetime import datetime
 from flask import request, flash, redirect, url_for, session
 ```
 
-**storage/files.py**
+**helpers/storage/files.py**
 ```python
 import os
 ```
 
-**utils/text.py**
+**helpers/utils/text.py**
 ```python
 import bleach
 ```
 
-**utils/security.py**
+**helpers/utils/security.py**
 ```python
 import secrets
 ```
 
-**utils/pagination.py**
+**helpers/utils/pagination.py**
 ```python
 (Sin dependencias externas)
 ```
 
-**utils/security.py**
+**helpers/utils/security.py**
 ```python
 import secrets
 ```
@@ -138,7 +139,7 @@ import secrets
 ## ✅ VALIDACIÓN
 
 - ✅ **Sintaxis:** Todos los módulos compilados sin errores
-- ✅ **Imports:** Centralizados en `src/app/__init__.py`
+- ✅ **Imports:** Centralizados en `src/app/helpers/__init__.py`
 - ✅ **Dependencias circulares:** Ninguna detectada
 - ✅ **Lógica SQL:** Sin cambios
 - ✅ **Comportamiento:** Idéntico al original
@@ -206,9 +207,9 @@ from src.app import (
 
 O importar directamente de los módulos:
 ```python
-from src.app.database import obtener_conexion
-from src.app.services import salvar_post
-from src.app.utils import generar_token
+from src.app.helpers.database import obtener_conexion
+from src.app.helpers.services import salvar_post
+from src.app.helpers.utils import generar_token
 ```
 
 ---

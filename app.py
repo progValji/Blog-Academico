@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from functools import wraps
 import pymysql
 
-from src.app import (
+from src.app.helpers import (
     obtener_conexion,
     enviar_correo,
     salvar_post,

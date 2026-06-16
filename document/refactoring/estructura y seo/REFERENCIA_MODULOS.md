@@ -2,72 +2,72 @@
 
 ## Localización de Funciones
 
-### 🗄️ Database (`src/app/database/`)
+### 🗄️ Database (`src/app/helpers/database/`)
 
 | Función | Módulo | Importar |
 |---------|--------|----------|
-| `obtener_conexion()` | `connection.py` | `from src.app.database import obtener_conexion` |
+| `obtener_conexion()` | `connection.py` | `from src.app.helpers.database import obtener_conexion` |
 
 ---
 
-### 📧 Services - Email (`src/app/services/`)
+### 📧 Services - Email (`src/app/helpers/services/`)
 
 | Función | Módulo | Importar | Nota |
 |---------|--------|----------|------|
-| `enviar_correo(app, nombre, token, correo)` | `email_service.py` | `from src.app.services import enviar_correo` | Requiere instancia Flask |
+| `enviar_correo(app, nombre, token, correo)` | `email_service.py` | `from src.app.helpers.services import enviar_correo` | Requiere instancia Flask |
 
 ---
 
-### 📝 Services - Posts (`src/app/services/`)
+### 📝 Services - Posts (`src/app/helpers/services/`)
 
 | Función | Módulo | Importar |
 |---------|--------|----------|
-| `salvar_post(post_id=None)` | `post_service.py` | `from src.app.services import salvar_post` |
-| `agrupar_filas_posts(resultados)` | `post_service.py` | `from src.app.services import agrupar_filas_posts` |
+| `salvar_post(post_id=None)` | `post_service.py` | `from src.app.helpers.services import salvar_post` |
+| `agrupar_filas_posts(resultados)` | `post_service.py` | `from src.app.helpers.services import agrupar_filas_posts` |
 
 ---
 
-### 💬 Services - Comments (`src/app/services/`)
+### 💬 Services - Comments (`src/app/helpers/services/`)
 
 | Función | Módulo | Importar |
 |---------|--------|----------|
-| `salvar_comentario(comentario_id=None, post_id=None)` | `comment_service.py` | `from src.app.services import salvar_comentario` |
+| `salvar_comentario(comentario_id=None, post_id=None)` | `comment_service.py` | `from src.app.helpers.services import salvar_comentario` |
 
 ---
 
-### 📂 Storage (`src/app/storage/`)
+### 📂 Storage (`src/app/helpers/storage/`)
 
 | Función | Módulo | Importar |
 |---------|--------|----------|
-| `allowed_file(filename)` | `files.py` | `from src.app.storage import allowed_file` |
-| `borrar_archivos(id)` | `files.py` | `from src.app.storage import borrar_archivos` |
-| `extraer_archivo(fila)` | `files.py` | `from src.app.storage import extraer_archivo` |
+| `allowed_file(filename)` | `files.py` | `from src.app.helpers.storage import allowed_file` |
+| `borrar_archivos(id)` | `files.py` | `from src.app.helpers.storage import borrar_archivos` |
+| `extraer_archivo(fila)` | `files.py` | `from src.app.helpers.storage import extraer_archivo` |
 
 ---
 
-### 🔐 Utils - Security (`src/app/utils/`)
+### 🔐 Utils - Security (`src/app/helpers/utils/`)
 
 | Función | Módulo | Importar |
 |---------|--------|----------|
-| `generar_token()` | `security.py` | `from src.app.utils import generar_token` |
-| `calcular_retraso_exponencial(intentos)` | `security.py` | `from src.app.utils import calcular_retraso_exponencial` |
+| `generar_token()` | `security.py` | `from src.app.helpers.utils import generar_token` |
+| `calcular_retraso_exponencial(intentos)` | `security.py` | `from src.app.helpers.utils import calcular_retraso_exponencial` |
 
 ---
 
-### 📄 Utils - Text (`src/app/utils/`)
+### 📄 Utils - Text (`src/app/helpers/utils/`)
 
 | Función | Módulo | Importar |
 |---------|--------|----------|
-| `limpiar_contenido(contenido)` | `text.py` | `from src.app.utils import limpiar_contenido` |
+| `limpiar_contenido(contenido)` | `text.py` | `from src.app.helpers.utils import limpiar_contenido` |
 
 ---
 
-### 📊 Utils - Pagination (`src/app/utils/`)
+### 📊 Utils - Pagination (`src/app/helpers/utils/`)
 
 | Función | Módulo | Importar |
 |---------|--------|----------|
-| `generar_paginas(pagina_actual, total_paginas, rango=2)` | `pagination.py` | `from src.app.utils import generar_paginas` |
-| `obtener_datos_paginados(cursor, ...)` | `pagination.py` | `from src.app.utils import obtener_datos_paginados` |
+| `generar_paginas(pagina_actual, total_paginas, rango=2)` | `pagination.py` | `from src.app.helpers.utils import generar_paginas` |
+| `obtener_datos_paginados(cursor, ...)` | `pagination.py` | `from src.app.helpers.utils import obtener_datos_paginados` |
 
 ---
 
@@ -99,16 +99,16 @@ from src.app import (
 
 ### Importar de módulos específicos
 ```python
-from src.app.database import obtener_conexion
-from src.app.services import salvar_post, salvar_comentario
-from src.app.utils import generar_token, limpiar_contenido
-from src.app.storage import allowed_file
+from src.app.helpers.database import obtener_conexion
+from src.app.helpers.services import salvar_post, salvar_comentario
+from src.app.helpers.utils import generar_token, limpiar_contenido
+from src.app.helpers.storage import allowed_file
 ```
 
 ### Importar en app.py actual
 ```python
 # app.py ya tiene todos importados:
-from src.app import (
+from src.app.helpers import (
     obtener_conexion,
     enviar_correo,
     salvar_post,

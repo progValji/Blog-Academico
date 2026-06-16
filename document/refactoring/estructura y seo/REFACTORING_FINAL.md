@@ -37,24 +37,26 @@
 
 ```
 src/app/
-├── __init__.py                  # Lazy loading de módulos
+├── __init__.py                  # Paquete raíz y configuración
 ├── config.py                    # Constantes globales
-├── database/
-│   ├── __init__.py              # Lazy loading
-│   └── connection.py            # obtener_conexion()
-├── services/
-│   ├── __init__.py              # Lazy loading
-│   ├── email_service.py         # enviar_correo()
-│   ├── post_service.py          # salvar_post(), agrupar_filas_posts()
-│   └── comment_service.py       # salvar_comentario()
-├── storage/
-│   ├── __init__.py              # Lazy loading
-│   └── files.py                 # allowed_file(), borrar_archivos(), extraer_archivo()
-└── utils/
-    ├── __init__.py              # Lazy loading
-    ├── security.py              # generar_token(), calcular_retraso_exponencial()
-    ├── text.py                  # limpiar_contenido()
-    └── pagination.py            # generar_paginas(), obtener_datos_paginados()
+└── helpers/
+    ├── __init__.py              # Lazy loading de módulos auxiliares
+    ├── database/
+    │   ├── __init__.py          # Lazy loading
+    │   └── connection.py        # obtener_conexion()
+    ├── services/
+    │   ├── __init__.py          # Lazy loading
+    │   ├── email_service.py     # enviar_correo()
+    │   ├── post_service.py      # salvar_post(), agrupar_filas_posts()
+    │   └── comment_service.py   # salvar_comentario()
+    ├── storage/
+    │   ├── __init__.py          # Lazy loading
+    │   └── files.py             # allowed_file(), borrar_archivos(), extraer_archivo()
+    └── utils/
+        ├── __init__.py          # Lazy loading
+        ├── security.py          # generar_token(), calcular_retraso_exponencial()
+        ├── text.py              # limpiar_contenido()
+        └── pagination.py        # generar_paginas(), obtener_datos_paginados()
 ```
 
 ---
@@ -63,7 +65,7 @@ src/app/
 
 ### Opción 1: Desde el paquete principal (RECOMENDADO)
 ```python
-from src.app import (
+from src.app.helpers import (
     obtener_conexion,
     salvar_post,
     generar_token,
@@ -73,15 +75,15 @@ from src.app import (
 
 ### Opción 2: Desde módulos específicos
 ```python
-from src.app.utils import generar_token
-from src.app.database import obtener_conexion
-from src.app.services import salvar_post
+from src.app.helpers.utils import generar_token
+from src.app.helpers.database import obtener_conexion
+from src.app.helpers.services import salvar_post
 from src.app.config import POSTS_POR_PAGINA
 ```
 
 ### Opción 3: Directo del archivo (para máximo control)
 ```python
-from src.app.utils.security import generar_token
+from src.app.helpers.utils.security import generar_token
 ```
 
 ---
