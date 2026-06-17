@@ -1,15 +1,64 @@
-from . import posts_bp
+from . import app as app
 from flask import render_template, request, redirect, url_for, flash, session, abort
 from src.app.helpers import (
     obtener_conexion,
     borrar_archivos,
     salvar_post,
     extraer_archivo,
+    agrupar_filas_posts,
+    obtener_datos_paginados,
 )
 from src.app.helpers.decorators import login_requerido
 import pymysql
 
-@posts_bp.route('/crear_post', methods=['GET', 'POST'])
+@app.route('/')
+def index():
+    pagina = request.args.get('pagina', 1, type=int)
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    try:
+        resultado, paginas = obtener_datos_paginados(
+            cursor,
+            consulta_datos="""
+            SELECT 
+                p.*,
+                IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
+                pm.id AS media_id,
+                pm.file_url,
+                pm.nombre_original,
+                pm.file_type,
+                (
+                    SELECT COUNT(*) 
+                    FROM comentarios c 
+                    WHERE c.post_id = p.id
+                ) AS total_comentarios
+            FROM (
+                SELECT * FROM posts
+                ORDER BY created_at DESC
+                LIMIT %s OFFSET %s
+            ) p
+            LEFT JOIN usuarios u ON p.user_id = u.id
+            LEFT JOIN post_media pm ON p.id = pm.post_id
+            ORDER BY p.created_at DESC
+            """,
+            consulta_total="SELECT COUNT(*) as total FROM posts",
+            params_datos=(),
+            params_total=(),
+            pagina=pagina
+        )
+        posts = agrupar_filas_posts(resultado)
+    finally:
+        cursor.close()
+        conexion.close()
+    return render_template(
+        'index.html',
+        posts=posts,
+        paginas=paginas,
+        user_id=session.get('user_id'),
+        titulo="Inicio",
+    )
+
+@app.route('/crear_post', methods=['GET', 'POST'])
 @login_requerido
 def crear_post():
     if request.method == 'POST':
@@ -17,7 +66,7 @@ def crear_post():
         return redirect(url_for('index'))
     return render_template("crear_post.html", titulo="Crea Un Post")
 
-@posts_bp.route('/visualizar_post/<int:post_id>')
+@app.route('/visualizar_post/<int:post_id>')
 def visualizar_post(post_id):
     try:
         conexion = obtener_conexion()
@@ -79,7 +128,7 @@ def visualizar_post(post_id):
         user_id=session.get('user_id')
     )
 
-@posts_bp.route('/editar_post/<int:post_id>', methods=['POST'])
+@app.route('/editar_post/<int:post_id>', methods=['POST'])
 def editar_post(post_id):
     try:
         conexion = obtener_conexion()
@@ -98,7 +147,7 @@ def editar_post(post_id):
         cursor.close()
         conexion.close()
 
-@posts_bp.route('/eliminar_post/<int:post_id>', methods=['POST'])
+@app.route('/eliminar_post/<int:post_id>', methods=['POST'])
 def eliminar_post(post_id):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
