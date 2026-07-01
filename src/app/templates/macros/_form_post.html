@@ -46,7 +46,7 @@
         {% if cancel_type == 'button' %}
             <button type="button" onclick="this.closest('dialog').close()">Cancelar</button>
         {% else %}
-            <a href="{{ cancel_target or url_for('index') }}" style="align-self:center">Cancelar</a>
+            <a href="{{ cancel_target or url_for('posts.index') }}" style="align-self:center">Cancelar</a>
         {% endif %}
     </div>
 </form>

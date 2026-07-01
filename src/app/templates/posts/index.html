@@ -26,8 +26,8 @@
     {% if posts %}
         <ul>
             {% for post in posts %}
-                {{ render_post_card(post, user_id, True, next_url_editar=url_for('index'),
-                    next_url_eliminar=url_for('index')) }}
+                {{ render_post_card(post, user_id, True, next_url_editar=url_for('posts.index'),
+                    next_url_eliminar=url_for('posts.index')) }}
             {% endfor %}
         </ul>
         <div>
@@ -37,7 +37,7 @@
                 {% elif p == pagina %}
                     <strong>{{ p }}</strong>
                 {% else %}
-                    <a href="{{ url_for('index', pagina=p) }}">{{ p }}</a>
+                    <a href="{{ url_for('posts.index', pagina=p) }}">{{ p }}</a>
                 {% endif %}
             {% endfor %}
         </div>
@@ -45,13 +45,13 @@
             {% if user_id %}
                 <p>No hay posts todavía. <a href="{{ url_for('crear_post') }}">Sé el primero en comentar</a>.</p>
             {% else %}
-                <p>No hay posts todavía. <a href="{{ url_for('login') }}?form=registrar">Regístrate</a> para crear el primero.</p>
+                <p>No hay posts todavía. <a href="{{ url_for('auth.login') }}?form=registrar">Regístrate</a> para crear el primero.</p>
             {% endif %}
     {% endif %}
     </section>
 
     <div>
-        <a href="{{ url_for('crear_post') }}">Crea un post</a>
+        <a href="{{ url_for('posts.crear_post') }}">Crea un post</a>
     </div>
 
     <script>

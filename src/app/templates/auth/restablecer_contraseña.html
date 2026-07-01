@@ -7,7 +7,7 @@
             <h2 class="text-3xl font-bold sm:text-center">✅ ¡Éxito!</h2>
             <p class="mt-4">{{ mensaje }}</p>
             <div class="mt-8 text-center">
-            <p><a href="{{ url_for('login') }}" class="hover:font-bold">→ Ir al Login</a></p>
+            <p><a href="{{ url_for('auth.login') }}" class="hover:font-bold">→ Ir al Login</a></p>
             </div>
         </section>
 
@@ -58,9 +58,9 @@
                     <p class="mt-4">{{ mensaje }}</p>
                 </div>
                 <div class="mt-auto text-center">
-                    <p><a href="{{ url_for('solicitar_recuperacion')}}" class= "hover:font-bold">
+                    <p><a href="{{ url_for('auth.solicitar_recuperacion')}}" class= "hover:font-bold">
                         ← Solicitar nuevo enlace</a></p>
-                    <p class="mt-4"><a href="{{ url_for('login') }}" class="hover:font-bold">← Ir al Login</a></p>
+                    <p class="mt-4"><a href="{{ url_for('auth.login') }}" class="hover:font-bold">← Ir al Login</a></p>
                 </div>
             </section>
         {% endif %}

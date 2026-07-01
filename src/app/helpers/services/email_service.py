@@ -3,18 +3,20 @@ Servicio de envío de correos electrónicos
 """
 from flask_mail import Mail, Message
 
+mail = Mail()
 
-def enviar_correo(app, nombre, token, correo):
+def init_mail(app):
+    mail.init_app(app)  # se conecta al app cuando esté lista
+
+def enviar_correo(nombre, token, correo):
     """
     Envía un correo de recuperación de contraseña
     
     Args:
-        app: Instancia de la aplicación Flask
         nombre (str): Nombre del usuario
         token (str): Token de recuperación
         correo (str): Dirección de correo del usuario
     """
-    mail = Mail(app)
     enlace_recuperacion = f'http://localhost:5000/restablecer_contraseña/{token}'
     msg = Message(
         subject='Recuperación de contraseña - Blog Académico',

@@ -52,6 +52,9 @@ def __getattr__(name):
     elif name == 'obtener_datos_paginados':
         from .utils import obtener_datos_paginados
         return obtener_datos_paginados
+    elif name == 'login_requerido':
+        from .decorators import login_requerido
+        return login_requerido
     
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -69,6 +72,8 @@ from .config import (
 __all__ = [
     # Database
     'obtener_conexion',
+    # Decorators
+    'login_requerido',
     # Services
     'enviar_correo',
     'salvar_post',

@@ -15,9 +15,10 @@ POSTS_POR_PAGINA = 10
 
 # Configuración de subida de archivos
 UPLOAD_FOLDER = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    'src',
-    'static'
+    os.path.dirname(os.path.dirname(__file__)),
+    'static',                                   
+    'uploads',                                 
+    'posts'                                     
 )
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'xlsx', 'pptx'}
 

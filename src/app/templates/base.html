@@ -24,10 +24,10 @@
         <h1>Blog Academico</h1>
         <nav>
             <ul>
-                <li><a href="{{ url_for('index') }}">Inicio</a>
-                    <a href="{{ url_for('login') }}?form=iniciar">Iniciar Sesion</a>
-                    <a href="{{ url_for('login') }}?form=registrar">Registrate</a>
-                    <a href="{{ url_for('perfil') }}">Perfil</a>
+                <li><a href="{{ url_for('posts.index') }}">Inicio</a>
+                    <a href="{{ url_for('auth.login') }}?form=iniciar">Iniciar Sesion</a>
+                    <a href="{{ url_for('auth.login') }}?form=registrar">Registrate</a>
+                    <a href="{{ url_for('auth.perfil') }}">Perfil</a>
                 </li>
             </ul>
         </nav>

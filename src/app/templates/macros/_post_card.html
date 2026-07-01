@@ -44,7 +44,7 @@
         {% endif %}
 
         {% if visualizacion_previa %}
-            <a href="{{ url_for('visualizar_post', post_id=post.id) }}"><h3>{{ post.titulo }}</h3></a>
+            <a href="{{ url_for('posts.visualizar_post', post_id=post.id) }}"><h3>{{ post.titulo }}</h3></a>
         {% else %}
             <h2>{{ post.titulo }}</h2>
         {% endif %}
@@ -89,7 +89,7 @@
 
         <dialog id="modal__edit__{{ post.id }}">
             <div>
-                <form method="post" action="{{ url_for('editar_post', post_id=post.id) }}"
+                <form method="post" action="{{ url_for('posts.editar_post', post_id=post.id) }}"
                 enctype="multipart/form-data">
                     <input type="hidden" name="next" value="{{ next_url_editar }}">
                     {{ form_post(

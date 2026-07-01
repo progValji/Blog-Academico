@@ -1,8 +1,9 @@
 import os
 from flask import Flask
 from dotenv import load_dotenv
-from src.app.helpers import UPLOAD_FOLDER
-from src.app.helpers.filters import init_filters
+from .helpers import UPLOAD_FOLDER
+from .helpers.filters import init_filters
+from .helpers.services.email_service import init_mail
 
 load_dotenv()
 
@@ -10,11 +11,14 @@ def create_app():
     # Creamos la instancia apuntando correctamente a tus carpetas
     app = Flask(__name__, 
                 template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
-                static_folder='../static',
+                static_folder='static',
                 static_url_path='/static')
 
     # Inicializar filtros personalizados
     init_filters(app)
+
+    # Inicializar el servicio de correo electrónico
+    init_mail(app)
 
     # Configuraciones básicas y de seguridad
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -38,9 +42,11 @@ def create_app():
     # REGISTRO DE BLUEPRINTS
     from .auth.routes import auth_bp
     from .posts.routes import posts_bp
+    from .comments.routes import comments_bp
 
     # Al no ponerle url_prefix a posts_bp, el @posts_bp.route('/') será tu INDEX global
     app.register_blueprint(posts_bp) 
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(comments_bp, url_prefix='/comments')
 
     return app

@@ -1,6 +1,6 @@
-from . import app as app
+from . import posts_bp
 from flask import render_template, request, redirect, url_for, flash, session, abort
-from src.app.helpers import (
+from ..helpers import (
     obtener_conexion,
     borrar_archivos,
     salvar_post,
@@ -8,10 +8,10 @@ from src.app.helpers import (
     agrupar_filas_posts,
     obtener_datos_paginados,
 )
-from src.app.helpers.decorators import login_requerido
+from ..helpers.decorators import login_requerido
 import pymysql
 
-@app.route('/')
+@posts_bp.route('/')
 def index():
     pagina = request.args.get('pagina', 1, type=int)
     conexion = obtener_conexion()
@@ -58,15 +58,15 @@ def index():
         titulo="Inicio",
     )
 
-@app.route('/crear_post', methods=['GET', 'POST'])
+@posts_bp.route('/crear_post', methods=['GET', 'POST'])
 @login_requerido
 def crear_post():
     if request.method == 'POST':
         salvar_post()
-        return redirect(url_for('index'))
+        return redirect(url_for('posts.index'))
     return render_template("crear_post.html", titulo="Crea Un Post")
 
-@app.route('/visualizar_post/<int:post_id>')
+@posts_bp.route('/visualizar_post/<int:post_id>')
 def visualizar_post(post_id):
     try:
         conexion = obtener_conexion()
@@ -128,7 +128,7 @@ def visualizar_post(post_id):
         user_id=session.get('user_id')
     )
 
-@app.route('/editar_post/<int:post_id>', methods=['POST'])
+@posts_bp.route('/editar_post/<int:post_id>', methods=['POST'])
 def editar_post(post_id):
     try:
         conexion = obtener_conexion()
@@ -147,7 +147,7 @@ def editar_post(post_id):
         cursor.close()
         conexion.close()
 
-@app.route('/eliminar_post/<int:post_id>', methods=['POST'])
+@posts_bp.route('/eliminar_post/<int:post_id>', methods=['POST'])
 def eliminar_post(post_id):
     conexion = obtener_conexion()
     cursor = conexion.cursor()

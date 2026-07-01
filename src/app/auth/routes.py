@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, time
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 
-from src.app.helpers import(
+from ..helpers import(
     obtener_conexion,
     calcular_retraso_exponencial,
     generar_token,
@@ -17,8 +17,8 @@ from src.app.helpers import(
     borrar_archivos
 )
 
-@auth_bp.route('/auth', methods=['GET', 'POST'])
-def auth():
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
     mensaje = None
     titulo = "Inicia Sesion"
     
@@ -113,7 +113,7 @@ def auth():
                     session['user_name'] = nombre
                     cursor.close()
                     conexion.close()
-                    return redirect(url_for('perfil'))
+                    return redirect(url_for('auth.perfil'))
             
             cursor.close()
             conexion.close()
@@ -145,7 +145,7 @@ def solicitar_recuperacion():
 
                 cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE id = %s', (token, expira_token, usuario_id))
                 conexion.commit()
-                enviar_correo(app, nombre_usuario, token, correo)
+                enviar_correo(nombre_usuario, token, correo)
                 mensaje = 'Se envio un enlace de recuperacion a tu correo'
             else: mensaje = 'Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion'
             cursor.close()
@@ -322,7 +322,7 @@ def editar_perfil():
         )
         conexion.commit()
         flash('Perfil actualizado correctamente.', 'success')
-        return redirect(url_for('perfil'))
+        return redirect(url_for('auth.perfil'))
     except Exception as e:
         conexion.rollback()
         flash(f'Ocurrió un error: {e}', 'error')
@@ -340,15 +340,15 @@ def cambiar_contrasena():
 
     if not contrasena_actual or not nueva_contrasena or not confirmar_contrasena:
         flash('Por favor completa todos los campos.', 'error')
-        return redirect(url_for('perfil'))
+        return redirect(url_for('auth.perfil'))
 
     if nueva_contrasena != confirmar_contrasena:
         flash('Las contraseñas no coinciden.', 'error')
-        return redirect(url_for('perfil'))
+        return redirect(url_for('auth.perfil'))
 
     if nueva_contrasena == contrasena_actual:
         flash('La nueva contraseña debe ser diferente a la actual.', 'error')
-        return redirect(url_for('perfil'))
+        return redirect(url_for('authperfil'))
 
     conexion = obtener_conexion()
     cursor = conexion.cursor()
@@ -360,7 +360,7 @@ def cambiar_contrasena():
         fila = cursor.fetchone()
         if not check_password_hash(fila[0], contrasena_actual):
             flash('La contraseña actual es incorrecta.', 'error')
-            return redirect(url_for('perfil'))
+            return redirect(url_for('auth.perfil'))
 
         nuevo_hash = generate_password_hash(nueva_contrasena)
         cursor.execute(
@@ -373,7 +373,7 @@ def cambiar_contrasena():
     except Exception as e:
         conexion.rollback()
         flash(f'Ocurrió un error: {e}', 'error')
-        return redirect(url_for('perfil'))
+        return redirect(url_for('auth.perfil'))
     finally:
         cursor.close()
         conexion.close()
@@ -381,7 +381,7 @@ def cambiar_contrasena():
 @auth_bp.route('/cerrar_sesion')
 def cerrar_sesion():
     session.pop('user_id', None)
-    return redirect(url_for('index'))
+    return redirect(url_for('auth.index'))
 
 @auth_bp.route('/eliminar_cuenta/<int:user_id>', methods=['POST'])
 def eliminar_cuenta(user_id):
@@ -394,7 +394,7 @@ def eliminar_cuenta(user_id):
         conexion.commit()
         borrar_archivos(user_id)
         flash('Cuenta eliminada con exito', 'success')
-        redirect(url_for("index"))
+        redirect(url_for("posts.index"))
     finally:
         cursor.close()
         conexion.close()

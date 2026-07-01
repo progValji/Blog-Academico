@@ -24,8 +24,8 @@
 {% block contenido %}
 
     {% if post %}
-        {{ render_post_card(post, user_id, next_url_editar=url_for('visualizar_post', post_id=post.id),
-            next_url_eliminar=url_for('visualizar_post', post_id=post.id)
+        {{ render_post_card(post, user_id, next_url_editar=url_for('posts.visualizar_post', post_id=post.id),
+            next_url_eliminar=url_for('posts.visualizar_post', post_id=post.id)
         ) }}
 
         <section class="comentarios">
@@ -39,7 +39,7 @@
             </ul>
             <div>
                 <h3>Deja un comentario</h3>
-                <form action="{{ url_for('agregar_comentario', post_id=post.id) }}" method="post">
+                <form action="{{ url_for('comments.agregar_comentario', post_id=post.id) }}" method="post">
                     {% if session.get('user_id') %}
                     <div class="form-group">
                         <label for="texto">Comentario</label>
