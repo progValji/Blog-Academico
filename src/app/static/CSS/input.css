@@ -18,6 +18,12 @@
     }
 }
 
+@layer utilities{
+    .post__contenido{
+        white-space: pre-wrap;
+    }
+}
+
 @layer components{
     .contenedor{
         width: min(1200px, 90%);

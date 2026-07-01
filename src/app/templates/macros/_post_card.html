@@ -49,9 +49,9 @@
         <small>{{ post.created_at | tiempo_relativo }}</small>
         <small>{{ post.autor_nombre }}</small>
         {% if visualizacion_previa %}
-            <p>{{ post.contenido[:10] }}...</p>
+            <p class="post__contenido">{{ post.contenido[:10] }}...</p>
         {% else %}
-            <p>{{ post.contenido }}</p>
+            <p class="post__contenido">{{ post.contenido | safe }}</p>
         {% endif %}
 
         {% for media in post.archivos %}

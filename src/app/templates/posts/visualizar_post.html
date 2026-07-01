@@ -24,9 +24,7 @@
 {% block contenido %}
 
     {% if post %}
-        {{ render_post_card(post, user_id, next_url_editar=url_for('posts.visualizar_post', post_id=post.id),
-            next_url_eliminar=url_for('posts.visualizar_post', post_id=post.id)
-        ) }}
+        {{ render_post_card(post, user_id, next_url_editar=url_for('posts.visualizar_post', post_id=post.id)) }}
 
         <section class="comentarios">
             <h2>Comentarios</h2>
