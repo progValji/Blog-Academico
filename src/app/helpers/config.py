@@ -20,7 +20,7 @@ UPLOAD_FOLDER = os.path.join(
     'uploads',                                 
     'posts'                                     
 )
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'xlsx', 'pptx'}
+ALLOWED_EXTENSIONS = {'pdf', 'txt'}
 
 # Configuración de email
 MAIL_CONFIG = {

@@ -26,8 +26,7 @@
     {% if posts %}
         <ul>
             {% for post in posts %}
-                {{ render_post_card(post, user_id, True, next_url_editar=url_for('posts.index'),
-                    next_url_eliminar=url_for('posts.index')) }}
+                {{ render_post_card(post, user_id, True, next_url_editar=url_for('posts.index')) }}
             {% endfor %}
         </ul>
         <div>

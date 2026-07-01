@@ -1,6 +1,5 @@
 {% from "macros/_form_post.html" import form_post %}
-{% macro render_post_card(post, user_id, visualizacion_previa=None, next_url_editar=None,
-    next_url_eliminar=None) %}
+{% macro render_post_card(post, user_id, visualizacion_previa=None, next_url_editar=None) %}
     <article class="post">  
         {% if user_id %}
             <div class="dropdown">
@@ -31,7 +30,6 @@
                                 data-title="¿Estas seguro de eliminar esta publicación?"
                                 data-message="Esta acción no se puede deshacer."
                                 data-action="/eliminar_post/{{ post.id }}"
-                                data-next-url="{{ next_url_eliminar }}"
                                 class="open_delete_modal">
                                 Eliminar post
                             </button>

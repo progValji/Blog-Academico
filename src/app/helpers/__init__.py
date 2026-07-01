@@ -55,6 +55,9 @@ def __getattr__(name):
     elif name == 'login_requerido':
         from .decorators import login_requerido
         return login_requerido
+    elif name == 'registrar_error_handler':
+        from .error_handlers import registrar_error_handler
+        return registrar_error_handler
     
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -74,6 +77,8 @@ __all__ = [
     'obtener_conexion',
     # Decorators
     'login_requerido',
+    # Error Handlers
+    'registrar_error_handler',
     # Services
     'enviar_correo',
     'salvar_post',

@@ -81,7 +81,7 @@ def salvar_post(post_id=None):
                 filename = secure_filename(file.filename)
                 extension = filename.rsplit('.', 1)[1].lower()
                 unique_name = f"{uuid.uuid4()}.{extension}"
-                filepath = os.path.join(UPLOAD_FOLDER, 'uploads', 'posts', unique_name)
+                filepath = os.path.join(UPLOAD_FOLDER, unique_name)
                 file.save(filepath)
                 relative_path = os.path.join('uploads', 'posts', unique_name).replace('\\', '/')
                 saved_files.append((relative_path, file.mimetype or extension, filename))

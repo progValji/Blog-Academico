@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from .helpers import UPLOAD_FOLDER
 from .helpers.filters import init_filters
 from .helpers.services.email_service import init_mail
+from .helpers.error_handlers import registrar_error_handler
 
 load_dotenv()
 
@@ -19,6 +20,9 @@ def create_app():
 
     # Inicializar el servicio de correo electrónico
     init_mail(app)
+
+    # Registrar manejadores de errores
+    registrar_error_handler(app)
 
     # Configuraciones básicas y de seguridad
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')

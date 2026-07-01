@@ -68,10 +68,9 @@ def crear_post():
 
 @posts_bp.route('/visualizar_post/<int:post_id>')
 def visualizar_post(post_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
     try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor(pymysql.cursors.DictCursor)
-
         cursor.execute("""
             SELECT 
                 p.*,
@@ -89,9 +88,8 @@ def visualizar_post(post_id):
         resultados = cursor.fetchall()
 
         if not resultados:
-            return render_template('visualizar_post.html',
-                                   titulo="Post No Encontrado",
-                                   post=None)
+            flash('El post que intentas visualizar no existe.', 'error')
+            return redirect(url_for('posts.index'))
 
         post = {
             'id': resultados[0]['id'],
@@ -115,7 +113,7 @@ def visualizar_post(post_id):
         comentarios = cursor.fetchall()
 
     except Exception as e:
-        print("Error:", e)
+        conexion.rollback()
         abort(500)
     finally:
         cursor.close()
@@ -130,19 +128,24 @@ def visualizar_post(post_id):
 
 @posts_bp.route('/editar_post/<int:post_id>', methods=['POST'])
 def editar_post(post_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
     try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
         cursor.execute("SELECT * FROM posts WHERE id = %s", (post_id,))
         post = cursor.fetchone()
 
-        if post is None: abort(404)
+        if post is None:
+            flash('El post que intentas editar no existe.', 'error')
+            return redirect(url_for('posts.index'))
+
         salvar_post(post_id)
-        next_url_editar = request.form.get('next', '/')
-        if next_url_editar == '/':
-            return redirect(url_for('index'))
-        else:
-            return redirect(next_url_editar)
+        conexion.commit()
+        flash('Post editado con éxito', 'success')
+        return redirect(url_for('posts.index'))
+    except Exception as e:
+        conexion.rollback()
+        flash('Ocurrió un error al editar el post. Inténtalo de nuevo.', 'error')
+        return redirect(url_for('posts.index'))
     finally:
         cursor.close()
         conexion.close()
@@ -156,12 +159,9 @@ def eliminar_post(post_id):
         cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
         conexion.commit()
         flash('Post borrado con exito', 'success')
-        next_url_eliminar = request.form.get('next', '/')
-        if next_url_eliminar == '/':
-            return redirect(url_for('index'))
-        else:
-            return redirect(next_url_eliminar)
-    except:
+        return redirect(url_for('posts.index'))
+    except Exception as e:
+        conexion.rollback()
         flash('Ocurrió un error al borrar el post. Inténtalo de nuevo.', 'error')
     finally:
         cursor.close()
