@@ -42,12 +42,15 @@
         {% endif %}
 
         {% if visualizacion_previa %}
-            <a href="{{ url_for('posts.visualizar_post', post_id=post.id) }}"><h3>{{ post.titulo }}</h3></a>
+            <a href="{{ url_for('posts.visualizar_post', post_id=post.id) }}"><h2
+                class="text-2xl sm:text-3xl font-semibold">{{ post.titulo }}</h2></a>
         {% else %}
-            <h2>{{ post.titulo }}</h2>
+            <h2 class="text-2xl sm:text-3xl">{{ post.titulo }}</h2>
         {% endif %}
-        <small>{{ post.created_at | tiempo_relativo }}</small>
-        <small>{{ post.autor_nombre }}</small>
+        <div class="flex gap-3 mb-2 text-gris-oscuro">
+            <small class="sm:text-base">{{ post.created_at | tiempo_relativo }}</small>
+            <small class="sm:text-base">{{ post.autor_nombre }}</small>
+        </div>
         {% if visualizacion_previa %}
             <p class="post__contenido">{{ post.contenido[:10] }}...</p>
         {% else %}

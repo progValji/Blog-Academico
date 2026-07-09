@@ -1,0 +1,65 @@
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="70 35 360 330">
+    <!-- Sombras -->
+    <ellipse cx="250" cy="345" rx="95" ry="15" fill="#DBEAFE" opacity="0.5"/>
+
+    <!-- Círculos decorativos -->
+    <circle cx="90" cy="120" r="10" fill="#DBEAFE"/>
+    <circle cx="410" cy="90" r="8" fill="#DBEAFE"/>
+    <circle cx="390" cy="290" r="6" fill="#94A3B8" opacity="0.6"/>
+    <circle cx="120" cy="300" r="5" fill="#94A3B8" opacity="0.6"/>
+
+    <!-- Documento -->
+    <g transform="translate(140 55)">
+        <!-- Hoja -->
+        <rect x="0" y="0" width="220" height="260" rx="18"
+              fill="#FFFFFF"
+              stroke="#E2E8F0"
+              stroke-width="3"/>
+
+        <!-- Esquina doblada -->
+        <path d="M180 0 L220 40 L180 40 Z"
+              fill="#DBEAFE"/>
+        <path d="M180 0 L180 40 L220 40"
+              fill="none"
+              stroke="#E2E8F0"
+              stroke-width="3"/>
+
+        <!-- Imagen -->
+        <rect x="30" y="35" width="160" height="90" rx="10"
+              fill="#DBEAFE"/>
+
+        <circle cx="65" cy="60" r="10" fill="#1D4ED8" opacity="0.7"/>
+
+        <path d="M40 105
+                 L85 70
+                 L115 95
+                 L145 75
+                 L180 105 Z"
+              fill="#1D4ED8"
+              opacity="0.75"/>
+
+        <!-- Líneas de texto -->
+        <rect x="30" y="145" width="150" height="10" rx="5" fill="#E2E8F0"/>
+        <rect x="30" y="168" width="120" height="10" rx="5" fill="#E2E8F0"/>
+        <rect x="30" y="191" width="145" height="10" rx="5" fill="#E2E8F0"/>
+        <rect x="30" y="214" width="100" height="10" rx="5" fill="#E2E8F0"/>
+
+        <!-- Icono de + -->
+        <circle cx="180" cy="220" r="22"
+                fill="#1D4ED8"/>
+        <rect x="177" y="210" width="6" height="20" rx="3" fill="#FFFFFF"/>
+        <rect x="170" y="217" width="20" height="6" rx="3" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Partículas -->
+    <g stroke="#94A3B8" stroke-width="2" stroke-linecap="round" opacity="0.6">
+        <line x1="80" y1="170" x2="90" y2="170"/>
+        <line x1="85" y1="165" x2="85" y2="175"/>
+
+        <line x1="420" y1="180" x2="430" y2="180"/>
+        <line x1="425" y1="175" x2="425" y2="185"/>
+
+        <line x1="380" y1="55" x2="388" y2="55"/>
+        <line x1="384" y1="51" x2="384" y2="59"/>
+    </g>
+</svg>

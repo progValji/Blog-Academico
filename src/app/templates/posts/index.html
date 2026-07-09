@@ -1,7 +1,8 @@
 <style>
     .post{
-        border: 2px solid;
-        margin-bottom: 1rem;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
     }
 
     .dropdown-content {
@@ -22,9 +23,11 @@
 {% from "macros/_post_card.html" import render_post_card %}
 
 {% block contenido %}
-    <section>
+    <section class="contenedor flex flex-col gap-5"
+    style="min-height: calc(100vh - 140px);">
+    <h1 class="text-4xl text-gris-oscuro font-bold mt-4">Foro</h1>
     {% if posts %}
-        <ul>
+        <ul class="flex flex-col gap-4">
             {% for post in posts %}
                 {{ render_post_card(post, user_id, True, next_url_editar=url_for('posts.index')) }}
             {% endfor %}
@@ -41,17 +44,30 @@
             {% endfor %}
         </div>
     {% else %}
-            {% if user_id %}
-                <p>No hay posts todavía. <a href="{{ url_for('crear_post') }}">Sé el primero en comentar</a>.</p>
-            {% else %}
-                <p>No hay posts todavía. <a href="{{ url_for('auth.login') }}?form=registrar">Regístrate</a> para crear el primero.</p>
-            {% endif %}
+        <div class="m-auto flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-center">
+            <div class="text-center">
+                <h1 class="text-4xl text-gris-oscuro font-bold">Nada en el foro</h1>
+                {% if user_id %}
+                    <p class="my-4">No hay posts todavía.</p>
+                    <a href="{{ url_for('crear_post') }}"
+                     class="block bg-azul-rey text-white hover:bg-azul-rey-hover
+                    py-4 rounded-xl shadow-lg">Sé el primero en comentar</a>
+                {% else %}
+                    <p class="my-4">No hay posts todavía</p>
+                    <a href="{{ url_for('auth.login') }}?form=registrar"
+                    class="block bg-azul-rey text-white hover:bg-azul-rey-hover
+                    py-4 rounded-xl shadow-lg">Regístrate para iniciar</a>
+                {% endif %}
+            </div>
+            <figure>
+                <img src="{{ url_for('static', filename='assets/ilustration/empty.svg')}}" alt=""
+                class="block max-inline-[100%]">
+            </figure>
+        </div>
     {% endif %}
     </section>
 
-    <div>
-        <a href="{{ url_for('posts.crear_post') }}">Crea un post</a>
-    </div>
+
 
     <script>
         document.querySelectorAll('.dropdown-btn').forEach(function(button) {
