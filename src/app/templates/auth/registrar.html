@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+    <section class="contenedor flex flex-col justify-center gap-8 h-full">
+
+        <div class="overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div class="bg-slate-800 p-8 text-white lg:w-1/2 flex flex-col">
+                <h1 class="text-3xl sm:text-4xl font-bold text-center">¡Hola!</h1>
+                <p class="my-8 text-lg text-gris-claro">
+                    Crea tu cuenta y empieza a disfrutar de todas nuestras publicaciones y conversaciones.
+                </p>
+                <div class="flex flex-col gap-4 items-center sm:flex-row">
+                    <a href="{{ url_for('auth.iniciar_sesion') }}" 
+                    class="text-white underline hover:no-underline">
+                        ¿Ya tienes una cuenta?
+                    </a>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <form method="post" id="registrar" class="form flex flex-col gap-4 bg-white">
+                    <h1 class="text-3xl font-semibold mb-4 text-gris-oscuro sm:text-4xl">Crea tu cuenta</h1>
+                    <div class="input__formulario">
+                        <input type="text" id="nombre" name="nombre" placeholder="" required>
+                        <label for="nombre">Nombre</label>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="email" id="correo" name="correo" placeholder="" required>
+                        <label for="correo">Correo</label>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="password" id="contraseña" name="contraseña" minlength="8" 
+                        placeholder="" required>
+                        <label for="contraseña">Contraseña</label>
+                        <button type="button" class="tooglePassword" data-visible="false">👁️</button>
+                        <span></span>
+                    </div>
+                    <button type="submit" disabled class="submit__formulario block
+                    text-white bg-azul-pizarra w-full">Registrar</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script type="module">
+        import { inicializarValidacionFormulario } from '../static/JS/formValidador.js'
+        const form = document.querySelector('form')
+        inicializarValidacionFormulario(form)
+    </script>
+
+    <script src="{{ url_for('static', filename='JS/tooglePassword.js') }}"></script>
+{% endblock %}

@@ -17,10 +17,9 @@
 {% from "macros/_post_card.html" import render_post_card %}
 
 {% block contenido %}
-    <section class="contenedor flex flex-col gap-5"
-    style="min-height: calc(100vh - 140px);">
+    <section class="contenedor">
     {% if posts %}
-    <h1 class="text-4xl text-gris-oscuro font-bold mt-4">Foro</h1>
+    <h1 class="text-4xl text-gris-oscuro font-bold my-4">Foro</h1>
         <ul class="flex flex-col gap-12">
             {% for post in posts %}
                 {{ render_post_card(post, user_id, True, next_url_editar=url_for('posts.index')) }}
@@ -49,7 +48,7 @@
                     py-4 rounded-xl shadow-lg">Sé el primero en comentar</a>
                 {% else %}
                     <p class="my-4">No hay posts todavía</p>
-                    <a href="{{ url_for('auth.login') }}?form=registrar"
+                    <a href="{{ url_for('auth.registrar') }}?form=registrar"
                     class="block bg-azul-rey text-white hover:bg-azul-rey-hover
                     py-4 rounded-xl shadow-lg">Regístrate para iniciar</a>
                 {% endif %}

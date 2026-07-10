@@ -58,6 +58,12 @@ def __getattr__(name):
     elif name == 'registrar_error_handler':
         from .error_handlers import registrar_error_handler
         return registrar_error_handler
+    elif name == 'validar_email':
+        from .utils.security import validar_email
+        return validar_email
+    elif name == 'validar_password':
+        from .utils.security import validar_password
+        return validar_password
     
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -94,6 +100,8 @@ __all__ = [
     'limpiar_contenido',
     'generar_paginas',
     'obtener_datos_paginados',
+    'validr_email',
+    'validar_password',
     # Config
     'MAX_INTENTOS',
     'TIEMPO_BLOQUEADO',

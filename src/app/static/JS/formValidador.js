@@ -4,7 +4,7 @@ import { validarNombre } from "./validadores/nombre.js";
 
 export function inicializarValidacionFormulario(form){
     const root = document.documentElement
-    const colorErrores = getComputedStyle(root).getPropertyValue('--color-errores').trim()
+    const colorErrores = getComputedStyle(root).getPropertyValue('--color-rojo-error').trim()
 
     const inputs = form.querySelectorAll(".input__formulario input");
     const submitBtn = form.querySelector("button[type='submit']");

@@ -19,7 +19,7 @@
 {% block contenido %}
 
     {% if post %}
-        <section class="contenedor flex flex-col justify-center gap-8" style="min-height: calc(100vh - 140px);">
+        <section class="contenedor flex flex-col justify-center gap-8 h-full">
             <section>
                 {{ render_post_card(post, user_id, next_url_editar=url_for('posts.visualizar_post', post_id=post.id)) }}
             </section>
@@ -45,7 +45,7 @@
                         {% else %}
                         <div class="flex flex-col gap-3 items-center justify-center">
                             <p>Debes iniciar sesión para comentar.</p>
-                            <a href="{{ url_for('auth.login') }}?form=registrar" 
+                            <a href="{{ url_for('auth.iniciar_sesion') }}?form=registrar" 
                             class="bg-gris-claro px-4 py-2 flex gap-2 rounded-xl">
                             <span>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 

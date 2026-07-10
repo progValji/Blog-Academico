@@ -25,10 +25,6 @@
             <h1 class="text-xl text-verde__menta font-semibold">{{mensaje}}</h1>
         {% endif %}
 
-        <div class="links">
-            <p><a href="{{ url_for('auth.login') }}" class="hover:font-bold">← Volver al Login</a></p>
-        </div>
-
         <script type="module">
             import { inicializarValidacionFormulario } from '../static/JS/formValidador.js'
             const form = document.querySelector('form')

@@ -3,6 +3,7 @@ from flask import render_template, request, redirect, url_for, flash, session
 from datetime import datetime, timedelta, time
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
+from pymysql import IntegrityError
 
 from ..helpers import(
     obtener_conexion,
@@ -14,114 +15,140 @@ from ..helpers import(
     TIEMPO_BLOQUEADO,
     TIEMPO_TOKEN,
     login_requerido,
-    borrar_archivos
+    borrar_archivos,
+    validar_email,
+    validar_password
 )
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
+@auth_bp.route('/iniciar_sesion', methods=['GET', 'POST'])
+def iniciar_sesion():
     mensaje = None
     titulo = "Inicia Sesion"
+    conexion = None
+    cursor = None
     
     if request.method == 'POST':
-        action = request.form.get('action')
         correo = request.form.get('correo')
         contraseña = request.form.get('contraseña')
+
+        if not correo or not contraseña:
+            return render_template('iniciar_sesion.html', mensaje='Completa todos los campos.', titulo=titulo)
+        
+        if validar_email(correo) is not True:
+            return render_template('iniciar_sesion.html', mensaje='Correo no valido.', titulo=titulo)
         
         try:
             conexion = obtener_conexion()
             cursor = conexion.cursor()
             
-            if action == 'iniciar':
-                #buscar usuario
-                cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo, ))
-                resultado = cursor.fetchone()
+            cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo, ))
+            resultado = cursor.fetchone()
 
-                if not resultado:
-                    time.sleep(1)
-                    mensaje = 'Usuario o contraseña incorrectas'
+            if not resultado:
+                time.sleep(1)
+                return render_template('iniciar_sesion.html', mensaje='Usuario o contraseña incorrectas', titulo=titulo)
+                
+            intentos_fallidos = resultado[5]
+            bloqueado_hasta = resultado[7]
+
+            #verificando si la cuenta esta bloqueada
+            if bloqueado_hasta:
+                if datetime.now() < bloqueado_hasta:
+                    # Cuenta aún bloqueada
+                    tiempo_restante = (bloqueado_hasta - datetime.now()).total_seconds() / 60
+                    mensaje = f'Cuenta bloqueada. Intenta en {int(tiempo_restante)} minutos o solicita recuperación de contraseña.'
                     cursor.close()
                     conexion.close()
-                    return render_template('login.html', mensaje=mensaje, titulo=titulo)
-                
-                intentos_fallidos = resultado[5]
-                bloqueado_hasta = resultado[7]
-
-                #verificando si la cuenta esta bloqueada
-                if bloqueado_hasta:
-                    bloqueado_hasta_dt = datetime.strptime(str(bloqueado_hasta), '%Y-%m-%d %H:%M:%S')
-                    if datetime.now() < bloqueado_hasta_dt:
-                        # Cuenta aún bloqueada
-                        tiempo_restante = (bloqueado_hasta_dt - datetime.now()).total_seconds() / 60
-                        mensaje = f'Cuenta bloqueada. Intenta en {int(tiempo_restante)} minutos o solicita recuperación de contraseña.'
-                        cursor.close()
-                        conexion.close()
-                        return render_template('login.html', mensaje=mensaje, titulo=titulo)
-                    else:
-                        # Tiempo de bloqueo expiró: resetear intentos
-                        cursor.execute("""
-                            UPDATE usuarios 
-                            SET intentos_fallidos = 0, bloqueado_hasta = NULL
-                            WHERE id = %s
-                        """, (resultado[0]))
-                        conexion.commit()
-                        intentos_fallidos = 0
-
-                #aplicar retraso segun intentos previos
-                retraso = calcular_retraso_exponencial(intentos_fallidos)
-                time.sleep(retraso)
-                
-                # veficiar contraseña
-                if check_password_hash(resultado[3], contraseña):
-                    #Login exitoso
+                    return render_template('iniciar_sesion.html', mensaje=mensaje, titulo=titulo)
+                else:
+                    # Tiempo de bloqueo expiró: resetear intentos
                     cursor.execute("""
+                        UPDATE usuarios 
+                        SET intentos_fallidos = 0, bloqueado_hasta = NULL
+                        WHERE id = %s
+                    """, (resultado[0]))
+                    conexion.commit()
+                    intentos_fallidos = 0
+
+            #aplicar retraso segun intentos previos
+            retraso = calcular_retraso_exponencial(intentos_fallidos)
+            time.sleep(retraso)
+                
+            # veficiar contraseña
+            if check_password_hash(resultado[3], contraseña):
+                #Login exitoso
+                cursor.execute("""
                     UPDATE usuarios
                     SET intentos_fallidos = 0, ultimo_intento = NULL, bloqueado_hasta=NULL
                     WHERE id = %s
-                    """, (resultado[0])) #tal vez ultimo intento deberia guardar la fechaYhora
-                    session['user_id'] = resultado[0]
-                    session['user_name'] = resultado[1]
-                    conexion.commit()
-                    cursor.close()
-                    conexion.close()
-                    return redirect(url_for('perfil'))
-                else:
-                    intentos_fallidos += 1
-                    nuevo_bloqueado_hasta = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEADO) if intentos_fallidos >= 5 else None
-
-                    cursor.execute("""
-                        UPDATE usuarios
-                        SET intentos_fallidos = %s, ultimo_intento = NOW(), bloqueado_hasta = %s
-                        WHERE id = %s  
-                        """, (intentos_fallidos, nuevo_bloqueado_hasta, resultado[0]))
-                    conexion.commit()
-                    mensaje = 'Usuario o contraseña incorrectos'
-            
-            elif action == 'registrar':
-                nombre = request.form.get('nombre')
-                
-                cursor.execute("SELECT id FROM usuarios WHERE correo = %s", (correo,))
-                if cursor.fetchone():
-                    mensaje = 'Verifica la información e intenta nuevamente'
-                else:
-                    contraseña_hash = generate_password_hash(contraseña, method='pbkdf2:sha256')
-                    cursor.execute("""
-                                    INSERT INTO usuarios (nombre_usuario, correo, contraseña_hash)
-                                    VALUES (%s, %s, %s)
-                                   """, (nombre, correo, contraseña_hash))
-                    conexion.commit()
-                    session['user_id'] = cursor.lastrowid
-                    session['user_name'] = nombre
-                    cursor.close()
-                    conexion.close()
-                    return redirect(url_for('auth.perfil'))
-            
-            cursor.close()
-            conexion.close()
-        
+                """, (resultado[0])) #tal vez ultimo intento deberia guardar la fechaYhora
+                session['user_id'] = resultado[0]
+                session['user_name'] = resultado[1]
+                conexion.commit()
+                cursor.close()
+                conexion.close()
+                return redirect(url_for('perfil'))
+            else:
+                intentos_fallidos += 1
+                nuevo_bloqueado_hasta = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEADO) if intentos_fallidos >= 5 else None
+                cursor.execute("""
+                    UPDATE usuarios
+                    SET intentos_fallidos = %s, ultimo_intento = NOW(), bloqueado_hasta = %s
+                    WHERE id = %s  
+                    """, (intentos_fallidos, nuevo_bloqueado_hasta, resultado[0]))
+                conexion.commit()
+                mensaje = 'Usuario o contraseña incorrectos'
         except Exception as e:
-            mensaje = f'Error: {str(e)}'
-    
-    return render_template('login.html', mensaje=mensaje, titulo=titulo)
+            if conexion: conexion.rollback()
+            mensaje = 'Ocurrió un error al procesar tu solicitud. Intentalo más tarde.'
+        finally:
+            if cursor: cursor.close()
+            if conexion: conexion.close()
+    return render_template('iniciar_sesion.html', mensaje=mensaje, titulo=titulo)
+
+@auth_bp.route('/registrar', methods=['GET', 'POST'])
+def registrar():
+    mensaje = None
+    titulo = "Registrate"
+    conexion = None
+    cursor = None
+    if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        correo = request.form.get('correo')
+        contraseña = request.form.get('contraseña')
+
+        if not nombre or not correo or not contraseña:
+            return render_template('registrar.html', mensaje='Por favor compelta todos los campos.', titulo=titulo)
+        
+        if validar_email(correo) is not True:
+            return render_template('registrar.html', mensaje='Correo no valido.', titulo=titulo)
+        
+        mensaje_password = validar_password(contraseña)
+        if mensaje_password:
+            return render_template('registrar.html', mensaje=mensaje_password, titulo=titulo)
+
+        try:
+            conexion = obtener_conexion()
+            cursor = conexion.cursor()
+            contraseña_hash = generate_password_hash(contraseña, method='pbkdf2:sha256')
+            cursor.execute("""
+                            INSERT INTO usuarios (nombre_usuario, correo, contraseña_hash)
+                            VALUES (%s, %s, %s)
+                        """, (nombre, correo, contraseña_hash))
+            conexion.commit()
+            session['user_id'] = cursor.lastrowid
+            session['user_name'] = nombre
+            return redirect(url_for('perfil'))
+        except IntegrityError:
+            if conexion: conexion.rollback()
+            mensaje = 'Verifica la información e intenta nuevamente'
+        except Exception as e:
+            if conexion: conexion.rollback()
+            mensaje = 'Ocurrió un error al procesar tu solicitud. Intentalo más tarde.'
+        finally:
+            if cursor: cursor.close()
+            if conexion: conexion.close()
+    return render_template('registrar.html', mensaje=mensaje, titulo=titulo)
 
 @auth_bp.route('/solicitar_recuperacion', methods=['GET', 'POST'])
 def solicitar_recuperacion():

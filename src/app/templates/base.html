@@ -29,7 +29,7 @@
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
     <header class="bg-azul-rey text-white
     sticky top-0 z-10">
@@ -67,7 +67,7 @@
                             <path d="M18.554 18.414a2 2 0 1 1 2.828 -2.828a2 2 0 0 1 -2.828 2.828" />
                             <path d="M16 19l1 1" /></svg>
                         </span>
-                        <a href="{{ url_for('auth.login') }}?form=iniciar">Iniciar Sesion</a>
+                        <a href="{{ url_for('auth.iniciar_sesion') }}">Iniciar Sesion</a>
                     </li>
                     <li class="nav__item">
                         <span>
@@ -80,7 +80,7 @@
                             <path d="M16 19h6" /><path d="M19 16v6" />
                             <path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></svg>
                         </span>
-                        <a href="{{ url_for('auth.login') }}?form=registrar">Registrate</a>
+                        <a href="{{ url_for('auth.registrar') }}">Registrate</a>
                     </li>
                     <li class="nav__item">
                         <span>
@@ -121,7 +121,7 @@
         </div>
     </header>
 
-    <main>
+    <main class="flex-1 flex flex-col justify-center">
         <section>
             {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}

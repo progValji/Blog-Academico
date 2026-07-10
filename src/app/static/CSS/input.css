@@ -90,7 +90,7 @@
             transition: border-color 0.3s ease;
 
             &:focus {
-                border-color: var(--color-verde__menta);
+                border-color: var(--color-azul-marino);
             }
 
             &:focus + label,
@@ -123,7 +123,7 @@
         & span{
             opacity: 0;
             font-size: .8rem;
-            color: var(--color-errores);
+            color: var(--color-rojo-error);
         }
     }
 }
