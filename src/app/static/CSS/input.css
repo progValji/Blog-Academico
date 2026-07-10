@@ -33,9 +33,18 @@
         opacity: 0.5;
         pointer-events: none;
     }
+    a{
+        color: var(--color-azul-marino)
+    }
 }
 
 @layer utilities{
+    .post, .comentario{
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    }
+
     .post__contenido{
         white-space: pre-wrap;
     }

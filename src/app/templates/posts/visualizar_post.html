@@ -1,9 +1,4 @@
 <style>
-    .comentario-item{
-        border: 2px solid;
-        margin-bottom: 1rem;
-    }
-
     .dropdown-content {
         display: none;
         position: absolute;
@@ -24,33 +19,52 @@
 {% block contenido %}
 
     {% if post %}
-        {{ render_post_card(post, user_id, next_url_editar=url_for('posts.visualizar_post', post_id=post.id)) }}
-
-        <section class="comentarios">
-            <h2>Comentarios</h2>
-            <ul>
-                {% for comentario in comentarios %}
-                    {{ render_comentario(comentario, user_id) }}
-                {% else %}
-                    <p>Sé el primero en comentar.</p>
-                {% endfor %}
-            </ul>
-            <div>
-                <h3>Deja un comentario</h3>
-                <form action="{{ url_for('comments.agregar_comentario', post_id=post.id) }}" method="post">
-                    {% if session.get('user_id') %}
-                    <div class="form-group">
-                        <label for="texto">Comentario</label>
-                        <textarea name="texto" rows="4" required class="form-control"></textarea>
-                    </div>
-                    <button type="submit" class="btn">Enviar Comentario</button>
+        <section class="contenedor flex flex-col justify-center gap-8" style="min-height: calc(100vh - 140px);">
+            <section>
+                {{ render_post_card(post, user_id, next_url_editar=url_for('posts.visualizar_post', post_id=post.id)) }}
+            </section>
+            <section id="comentarios">
+                <h2 class="text-2xl sm:text-3xl text-azul-marino font-semibold">Comentarios</h2>
+                <hr class="text-gris-claro">
+                <ul class="my-8">
+                    {% for comentario in comentarios %}
+                        {{ render_comentario(comentario, user_id) }}
                     {% else %}
-                    <div>
-                        <p>Para hacer un comentario, debes estar tener una cuenta</p>
-                    </div>
-                    {% endif %}
-                </form>
-            </div>
+                        <p>Todavía no hay comentarios.</p>
+                        <p>¡Sé el primero en compartir tu opinión!</p>
+                    {% endfor %}
+                </ul>
+                <div>
+                    <form action="{{ url_for('comments.agregar_comentario', post_id=post.id) }}" method="post">
+                        {% if session.get('user_id') %}
+                        <div class="form-group">
+                            <label for="texto">Comentario</label>
+                            <textarea name="texto" rows="4" required class="form-control"></textarea>
+                        </div>
+                        <button type="submit" class="btn">Enviar Comentario</button>
+                        {% else %}
+                        <div class="flex flex-col gap-3 items-center justify-center">
+                            <p>Debes iniciar sesión para comentar.</p>
+                            <a href="{{ url_for('auth.login') }}?form=registrar" 
+                            class="bg-gris-claro px-4 py-2 flex gap-2 rounded-xl">
+                            <span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+                                stroke-linecap="round" stroke-linejoin="round" 
+                                class="icon icon-tabler icons-tabler-outline icon-tabler-user-key">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                                <path d="M6 21v-2a4 4 0 0 1 4 -4h5" />
+                                <path d="M18.5 18.5l-3.5 3.5l-1.5 -1.5" />
+                                <path d="M18.554 18.414a2 2 0 1 1 2.828 -2.828a2 2 0 0 1 -2.828 2.828" />
+                                <path d="M16 19l1 1" /></svg>
+                            </span>
+                            Iniciar Sesión</a>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </section>
         </section>
 
         <script>

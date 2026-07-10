@@ -41,18 +41,14 @@
             </div>
         {% endif %}
 
-        {% if visualizacion_previa %}
-            <a href="{{ url_for('posts.visualizar_post', post_id=post.id) }}"><h2
-                class="text-2xl sm:text-3xl font-semibold">{{ post.titulo }}</h2></a>
-        {% else %}
-            <h2 class="text-2xl sm:text-3xl">{{ post.titulo }}</h2>
-        {% endif %}
-        <div class="flex gap-3 mb-2 text-gris-oscuro">
-            <small class="sm:text-base">{{ post.created_at | tiempo_relativo }}</small>
-            <small class="sm:text-base">{{ post.autor_nombre }}</small>
+        <h2 class="text-2xl sm:text-3xl font-semibold text-azul-marino">{{ post.titulo }}</h2>
+        <div class="flex gap-3 my-2 text-gris-oscuro">
+            <small class="sm:text-base">📅 {{ post.created_at | tiempo_relativo }}</small>
+            <small class="sm:text-base">👤 {{ post.autor_nombre }}</small>
         </div>
+        <hr class="mb-5 text-gris-claro">
         {% if visualizacion_previa %}
-            <p class="post__contenido">{{ post.contenido[:10] }}...</p>
+            <p class="post__contenido mb-4">{{ post.contenido | crear_preview | safe}}</p>
         {% else %}
             <p class="post__contenido">{{ post.contenido | safe }}</p>
         {% endif %}
@@ -70,21 +66,15 @@
         {% endfor %}
         
         {% if visualizacion_previa %}
-            <div>
-                {% if post.total_comentarios == 0 %}
-                    <p>Se el primero en comentar</p>
-                {% else %}
-                    <p>{{ post.total_comentarios }} Comentarios</p>
-                {% endif %}
-                <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
-                    stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline 
-                    icon-tabler-messages">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 14l-3 
-                    -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
-                    <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" /></svg>
-                </span>
+            <div class="flex gap-4 items-center mt-5">
+                <div>
+                    <p>💬 {{ post.total_comentarios }} Comentarios</p>
+                </div>
+                <div class="grow">
+                    <a href="{{ url_for('posts.visualizar_post', post_id=post.id) }}"
+                    class="block text-center bg-azul-rey text-white hover:bg-azul-rey-hover
+                    py-2 px-4 rounded-xl shadow-lg">📄 Ver post</a>
+                </div>
             </div>
         {% endif %}
 

@@ -1,10 +1,4 @@
 <style>
-    .post{
-        padding: 2rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-    }
-
     .dropdown-content {
         display: none;
         position: absolute;
@@ -25,21 +19,22 @@
 {% block contenido %}
     <section class="contenedor flex flex-col gap-5"
     style="min-height: calc(100vh - 140px);">
-    <h1 class="text-4xl text-gris-oscuro font-bold mt-4">Foro</h1>
     {% if posts %}
-        <ul class="flex flex-col gap-4">
+    <h1 class="text-4xl text-gris-oscuro font-bold mt-4">Foro</h1>
+        <ul class="flex flex-col gap-12">
             {% for post in posts %}
                 {{ render_post_card(post, user_id, True, next_url_editar=url_for('posts.index')) }}
             {% endfor %}
         </ul>
-        <div>
+        <div class="flex flex-wrap gap-5 justify-center my-8">
             {% for p in paginas %}
                 {% if p == "..." %}
                     <span>...</span>
                 {% elif p == pagina %}
                     <strong>{{ p }}</strong>
                 {% else %}
-                    <a href="{{ url_for('posts.index', pagina=p) }}">{{ p }}</a>
+                    <a href="{{ url_for('posts.index', pagina=p) }}"
+                    class="border-2 p-2">{{ p }}</a>
                 {% endif %}
             {% endfor %}
         </div>

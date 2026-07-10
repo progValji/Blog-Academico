@@ -1,5 +1,5 @@
 {% macro render_comentario(comentario, user_id, mostrar_link_post=None, next='visualizar_post') %}
-    <li class="comentario-item">
+    <li class="comentario">
         {% if comentario.user_id == user_id %}
             <div class="dropdown">
                 <button class="dropdown-btn">
@@ -32,8 +32,11 @@
                 </ul>
             </div>
         {% endif %}
-        <strong>{{ comentario.autor }}</strong> dice:
-        <p>{{ comentario.created_at | tiempo_relativo}}</p>
+        <div class="flex justify-between items-center">
+            <small class="text-gris-oscuro sm:text-base">📅 {{ comentario.created_at | tiempo_relativo}}</small>
+            <small class="sm:text-base">👤 {{ comentario.autor }}</small>
+        </div>
+        <hr class="text-gris-claro mb-5 mt-2">
         <p>{{ comentario.contenido | safe }}</p>
 
         {% if mostrar_link_post %}
