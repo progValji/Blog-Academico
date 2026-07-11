@@ -111,8 +111,7 @@
                     <ul>
                         {% for post in posts %}
                             {{ render_post_card(post, user_id, True,
-                                next_url_editar=url_for('posts.perfil', seccion='posts'),
-                                next_url_eliminar=url_for('posts.perfil', seccion='posts')) 
+                                next_url_editar=url_for('posts.perfil', seccion='posts')) 
                             }}   
                         {% endfor %}
                     </ul>

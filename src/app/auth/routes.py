@@ -1,6 +1,7 @@
 from . import auth_bp
 from flask import render_template, request, redirect, url_for, flash, session
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
+import time
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 from pymysql import IntegrityError
@@ -32,11 +33,11 @@ def iniciar_sesion():
         contraseña = request.form.get('contraseña')
 
         if not correo or not contraseña:
-            return render_template('iniciar_sesion.html', mensaje='Completa todos los campos.', titulo=titulo)
-        
+            flash('Completa los campos necesarios.', 'warning')
+            return redirect(url_for('auth.iniciar_sesion'))
         if validar_email(correo) is not True:
-            return render_template('iniciar_sesion.html', mensaje='Correo no valido.', titulo=titulo)
-        
+            flash('El correo ingresado no es valido', 'warning')
+            return redirect(url_for('auth.iniciar_sesion'))
         try:
             conexion = obtener_conexion()
             cursor = conexion.cursor()
@@ -46,7 +47,8 @@ def iniciar_sesion():
 
             if not resultado:
                 time.sleep(1)
-                return render_template('iniciar_sesion.html', mensaje='Usuario o contraseña incorrectas', titulo=titulo)
+                flash('Usuario o contraseña incorrectas.', 'warning')
+                return redirect(url_for('auth.iniciar_sesion'))
                 
             intentos_fallidos = resultado[5]
             bloqueado_hasta = resultado[7]
@@ -57,9 +59,8 @@ def iniciar_sesion():
                     # Cuenta aún bloqueada
                     tiempo_restante = (bloqueado_hasta - datetime.now()).total_seconds() / 60
                     mensaje = f'Cuenta bloqueada. Intenta en {int(tiempo_restante)} minutos o solicita recuperación de contraseña.'
-                    cursor.close()
-                    conexion.close()
-                    return render_template('iniciar_sesion.html', mensaje=mensaje, titulo=titulo)
+                    flash(mensaje, 'warning')
+                    return redirect(url_for('auth.iniciar_sesion'))
                 else:
                     # Tiempo de bloqueo expiró: resetear intentos
                     cursor.execute("""
@@ -85,9 +86,8 @@ def iniciar_sesion():
                 session['user_id'] = resultado[0]
                 session['user_name'] = resultado[1]
                 conexion.commit()
-                cursor.close()
-                conexion.close()
-                return redirect(url_for('perfil'))
+                flash('Iniciaste sesion de forma correcta.','success')
+                return redirect(url_for('auth.perfil'))
             else:
                 intentos_fallidos += 1
                 nuevo_bloqueado_hasta = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEADO) if intentos_fallidos >= 5 else None
@@ -97,14 +97,16 @@ def iniciar_sesion():
                     WHERE id = %s  
                     """, (intentos_fallidos, nuevo_bloqueado_hasta, resultado[0]))
                 conexion.commit()
-                mensaje = 'Usuario o contraseña incorrectos'
+                flash('Usuario o contraseña incorrectas.', 'warning')
         except Exception as e:
             if conexion: conexion.rollback()
-            mensaje = 'Ocurrió un error al procesar tu solicitud. Intentalo más tarde.'
+            flash('Ocurrió un error al procesar tu solicitud. Intentalo más tarde.', 'warning')
+            print(e)
+            return redirect(url_for('auth.iniciar_sesion'))
         finally:
             if cursor: cursor.close()
             if conexion: conexion.close()
-    return render_template('iniciar_sesion.html', mensaje=mensaje, titulo=titulo)
+    return render_template('iniciar_sesion.html', titulo=titulo)
 
 @auth_bp.route('/registrar', methods=['GET', 'POST'])
 def registrar():
@@ -118,14 +120,16 @@ def registrar():
         contraseña = request.form.get('contraseña')
 
         if not nombre or not correo or not contraseña:
-            return render_template('registrar.html', mensaje='Por favor compelta todos los campos.', titulo=titulo)
-        
+            flash('Completa los campos necesarios.', 'warning')
+            return redirect(url_for('auth.registrar'))
         if validar_email(correo) is not True:
-            return render_template('registrar.html', mensaje='Correo no valido.', titulo=titulo)
+            flash('Ingresa un correo valido.', 'warning')
+            return redirect(url_for('auth.registrar'))
         
         mensaje_password = validar_password(contraseña)
         if mensaje_password:
-            return render_template('registrar.html', mensaje=mensaje_password, titulo=titulo)
+            flash(mensaje_password, 'warning')
+            return redirect(url_for('auth.registrar'))
 
         try:
             conexion = obtener_conexion()
@@ -138,13 +142,16 @@ def registrar():
             conexion.commit()
             session['user_id'] = cursor.lastrowid
             session['user_name'] = nombre
-            return redirect(url_for('perfil'))
+            flash('Registrado con exito.', 'success')
+            return redirect(url_for('auth.perfil'))
         except IntegrityError:
             if conexion: conexion.rollback()
-            mensaje = 'Verifica la información e intenta nuevamente'
+            flash('Verifica la información e intenta nuevamente.', 'warning')
+            return redirect(url_for('auth.registrar'))
         except Exception as e:
             if conexion: conexion.rollback()
-            mensaje = 'Ocurrió un error al procesar tu solicitud. Intentalo más tarde.'
+            flash('Ocurrió un error al procesar tu solicitud. Intentalo más tarde.', 'warning')
+            return redirect(url_for('auth.registrar'))
         finally:
             if cursor: cursor.close()
             if conexion: conexion.close()
@@ -157,13 +164,21 @@ def solicitar_recuperacion():
     if request.method == 'POST':
         correo = request.form.get('correo')
 
+        if not correo:
+            flash('Completa el campo necesario.', 'warning')
+            return redirect(url_for('auth_bp.solicitar_recuperacion'))
+        if validar_email(correo) is not True:
+            flash('Correo no válido.', 'warning')
+            return redirect(url_for('auth_bp.solicitar_recuperacion'))
+        
+        conexion = None
+        cursor = None
         try:
             conexion = obtener_conexion()
             cursor = conexion.cursor()
 
-            cursor.execute('SELECT id, nombre_usuario FROM usuarios WHERE correo = %s', (correo))
+            cursor.execute('SELECT id, nombre_usuario FROM usuarios WHERE correo = %s', (correo,))
             resultado = cursor.fetchone()
-            respuesta = None
 
             if resultado:
                 usuario_id, nombre_usuario = resultado
@@ -173,12 +188,16 @@ def solicitar_recuperacion():
                 cursor.execute('UPDATE usuarios SET reset_token = %s, token_expira = %s WHERE id = %s', (token, expira_token, usuario_id))
                 conexion.commit()
                 enviar_correo(nombre_usuario, token, correo)
-                mensaje = 'Se envio un enlace de recuperacion a tu correo'
-            else: mensaje = 'Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion'
-            cursor.close()
-            conexion.close()
-            return render_template('solicitar_recuperacion.html', mensaje =mensaje, titulo=titulo)
-        except Exception as e: return render_template('solicitar_recuperacion.html', mensaje=f'Error: {e}' )
+
+            flash('Si el correo existe en nuestro sistema, recibirás un enlace de recuperación.', 'success')
+            return redirect(url_for('auth_bp.solicitar_recuperacion'))
+        except Exception as e: 
+            if conexion: conexion.rollback()
+            flash('Inténtalo de nuevo más tarde.', 'danger')
+            return redirect(url_for('auth.solicitar_recuperacion'))
+        finally:
+            if cursor: cursor.close()
+            if conexion: conexion.close()
     return render_template('solicitar_recuperacion.html', mensaje = mensaje, titulo=titulo)
 
 @auth_bp.route('/restablecer_contraseña/<token>', methods=['GET', 'POST'])
@@ -408,7 +427,7 @@ def cambiar_contrasena():
 @auth_bp.route('/cerrar_sesion')
 def cerrar_sesion():
     session.pop('user_id', None)
-    return redirect(url_for('auth.index'))
+    return redirect(url_for('posts.index'))
 
 @auth_bp.route('/eliminar_cuenta/<int:user_id>', methods=['POST'])
 def eliminar_cuenta(user_id):
