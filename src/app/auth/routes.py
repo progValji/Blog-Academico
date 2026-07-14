@@ -159,17 +159,16 @@ def registrar():
 
 @auth_bp.route('/solicitar_recuperacion', methods=['GET', 'POST'])
 def solicitar_recuperacion():
-    mensaje = None
     titulo = "Solicitar Contraseña"
     if request.method == 'POST':
         correo = request.form.get('correo')
 
         if not correo:
             flash('Completa el campo necesario.', 'warning')
-            return redirect(url_for('auth_bp.solicitar_recuperacion'))
+            return redirect(url_for('auth.solicitar_recuperacion'))
         if validar_email(correo) is not True:
             flash('Correo no válido.', 'warning')
-            return redirect(url_for('auth_bp.solicitar_recuperacion'))
+            return redirect(url_for('auth.solicitar_recuperacion'))
         
         conexion = None
         cursor = None
@@ -190,7 +189,7 @@ def solicitar_recuperacion():
                 enviar_correo(nombre_usuario, token, correo)
 
             flash('Si el correo existe en nuestro sistema, recibirás un enlace de recuperación.', 'success')
-            return redirect(url_for('auth_bp.solicitar_recuperacion'))
+            return redirect(url_for('auth.solicitar_recuperacion'))
         except Exception as e: 
             if conexion: conexion.rollback()
             flash('Inténtalo de nuevo más tarde.', 'danger')
@@ -198,12 +197,13 @@ def solicitar_recuperacion():
         finally:
             if cursor: cursor.close()
             if conexion: conexion.close()
-    return render_template('solicitar_recuperacion.html', mensaje = mensaje, titulo=titulo)
+    return render_template('solicitar_recuperacion.html', titulo=titulo)
 
 @auth_bp.route('/restablecer_contraseña/<token>', methods=['GET', 'POST'])
 def restablecer_contraseña(token):
-    mensaje = None
     token_valido = False
+    conexion = None
+    cursor = None
 
     try:
         conexion = obtener_conexion()
@@ -214,48 +214,48 @@ def restablecer_contraseña(token):
             WHERE reset_token = %s AND token_expira > NOW()
         """, (token))
         resultado = cursor.fetchone()
-        
-        if resultado:
-            token_valido = True
-            usuario_id = resultado[0]
-            
-            if request.method == 'POST':
-                nueva_contraseña = request.form.get('nueva_contraseña')
-                confirmar_contraseña = request.form.get('confirmar_contraseña')
-                
-                if nueva_contraseña != confirmar_contraseña:
-                    mensaje = '❌ Las contraseñas no coinciden ❌'
-                else:
-                    contraseña_hash = generate_password_hash(nueva_contraseña, method='pbkdf2:sha256')
-                    cursor.execute("""
-                        UPDATE usuarios 
-                        SET contraseña_hash = %s, 
-                            reset_token = NULL, 
-                            token_expira = NULL,
-                            intentos_fallidos = 0,
-                            bloqueado_hasta = NULL
-                        WHERE id = %s
-                    """, (contraseña_hash, usuario_id))
-                    conexion.commit()
-                    cursor.close()
-                    conexion.close()
 
-                    mensaje = '✅ Contraseña actualizada correctamente. Ya puedes iniciar sesión.'
-                    return render_template('restablecer_contraseña.html', 
-                                         mensaje=mensaje, 
-                                         token_valido=False,
-                                         exito=True)
-        else:
-            # Token inválido o expirado
-            token_valido = False
-            mensaje = 'Token inválido o expirado. Solicita un nuevo enlace de recuperación.'
-        
-        cursor.close()
-        conexion.close()
-    except Exception as e: 
-        mensaje = f'Error: {e}'
-    
-    return render_template('restablecer_contraseña.html', mensaje=mensaje, token_valido=token_valido, titulo = "Restablecer Contraseña")
+        if not resultado:
+            flash('Token inválido o expirado. Solicita un nuevo enlace de recuperación.', 'danger')
+            return render_template('restablecer_contraseña.html', token_valido=False, titulo="Restablecer Contraseña")
+
+        token_valido = True
+        usuario_id = resultado[0]
+
+        if request.method == 'POST':
+            nueva_contraseña = request.form.get('nueva_contraseña')
+            confirmar_contraseña = request.form.get('confirmar_contraseña')
+
+            if not nueva_contraseña or len(nueva_contraseña) < 8:
+                flash('❌ La contraseña debe tener al menos 8 caracteres', 'warning')
+                return render_template('restablecer_contraseña.html', token_valido=True, titulo="Restablecer Contraseña")
+
+            if nueva_contraseña != confirmar_contraseña:
+                flash('❌ Las contraseñas no coinciden', 'warning')
+                return render_template('restablecer_contraseña.html', token_valido=True, titulo="Restablecer Contraseña")
+
+            contraseña_hash = generate_password_hash(nueva_contraseña, method='pbkdf2:sha256')
+            cursor.execute("""
+                UPDATE usuarios 
+                SET contraseña_hash = %s, 
+                    reset_token = NULL, 
+                    token_expira = NULL,
+                    intentos_fallidos = 0,
+                    bloqueado_hasta = NULL
+                WHERE id = %s
+            """, (contraseña_hash, usuario_id))
+            conexion.commit()
+
+            flash('✅ Contraseña actualizada correctamente. Ya puedes iniciar sesión.', 'success')
+            return redirect(url_for('auth.iniciar_sesion'))
+        return render_template('restablecer_contraseña.html', token_valido=True, titulo="Restablecer Contraseña")
+    except Exception as e:
+        if conexion: conexion.rollback()
+        flash('Inténtalo de nuevo más tarde.', 'danger')
+        return redirect(url_for('posts.index'))
+    finally:
+        if cursor: cursor.close()
+        if conexion: conexion.close()
 
 @auth_bp.route('/perfil')
 @login_requerido

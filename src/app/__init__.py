@@ -14,16 +14,7 @@ def create_app():
                 template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
                 static_folder='static',
                 static_url_path='/static')
-
-    # Inicializar filtros personalizados
-    init_filters(app)
-
-    # Inicializar el servicio de correo electrónico
-    init_mail(app)
-
-    # Registrar manejadores de errores
-    registrar_error_handler(app)
-
+    
     # Configuraciones básicas y de seguridad
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -36,6 +27,17 @@ def create_app():
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+    # Inicializar filtros personalizados
+    init_filters(app)
+
+    # Inicializar el servicio de correo electrónico
+    init_mail(app)
+
+    # Registrar manejadores de errores
+    registrar_error_handler(app)
+
+    print(app.config.get('MAIL_SERVER'))       # imprimirá None con el orden viejo
 
     # Asegurar que exista el directorio de subidas
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)

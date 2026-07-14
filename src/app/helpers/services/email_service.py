@@ -17,12 +17,12 @@ def enviar_correo(nombre, token, correo):
         token (str): Token de recuperación
         correo (str): Dirección de correo del usuario
     """
-    enlace_recuperacion = f'http://localhost:5000/restablecer_contraseña/{token}'
+    enlace_recuperacion = f'http://localhost:5000/auth/restablecer_contraseña/{token}'
     msg = Message(
         subject='Recuperación de contraseña - Blog Académico',
         recipients=[correo],
         html=f"""
-        <h2>Hola {nombre},</h2>
+        <h2>Hola {nombre}</h2>
         <p>Recibimos una solicitud para restablecer tu contraseña.</p>
         <p><a href="{enlace_recuperacion}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
             Restablecer Contraseña

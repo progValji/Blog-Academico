@@ -1,32 +1,23 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-<section class="bg-fondo h-screen flex flex-col items-center justify-center gap-8">
-        {% if exito %}
-        <section class="w-90 max-w-[90%] rounded-xl bg-azul__petroleo px-10 py-16 text-white">
-            <h2 class="text-3xl font-bold sm:text-center">✅ ¡Éxito!</h2>
-            <p class="mt-4">{{ mensaje }}</p>
-            <div class="mt-8 text-center">
-            <p><a href="{{ url_for('auth.login') }}" class="hover:font-bold">→ Ir al Login</a></p>
-            </div>
-        </section>
-
-        {% elif token_valido %}
-            <section class="w-90  max-w-[90%] shadow-2xl rounded-xl py-14
-             text-white px-8 bg-azul__petroleo">
-                <h2 class="text-3xl font-bold sm:text-center">🔐 Nueva Contraseña 🔐</h2>
-                <p class="mt-4">Ingresa tu nueva contraseña</p>
+<section class="">
+        {% if token_valido %}
+            <section style="box-shadow: var(--shadow-card)"
+            class="w-[90%] max-w-l mx-auto p-8 rounded-3xl flex flex-col gap-4 bg-white">
+                <h2 class="text-3xl text-azul-marino font-bold text-center">🔐 Nueva Contraseña 🔐</h2>
+                <p>Ingresa tu nueva contraseña</p>
                 
-                <form method="POST" class="mt-8 flex flex-col gap-4 bg-inherit">
+                <form method="POST" class="flex flex-col gap-4 bg-inherit">
                     <div class="input__formulario">
-                        <input type="password" id="nueva_contraseña" name="nueva_contraseña" 
+                        <input type="password" id="contraseña" name="nueva_contraseña" 
                         placeholder="" required minlength="8">
                         <label for="nueva_contraseña">Nueva Contraseña</label>
                         <button type="button" class="tooglePassword" data-visible="false">👁️</button>
                         <span></span>
                     </div>
                     <div class="input__formulario">
-                        <input type="password" id="confirmar_contraseña" name="confirmar_contraseña" 
+                        <input type="password" id="contraseña" name="confirmar_contraseña" 
                         placeholder="" required minlength="8">
                         <label for="confirmar_contraseña">Confirmar Contraseña</label>
                         <button type="button" class="tooglePassword" data-visible="false">👁️</button>
@@ -34,15 +25,12 @@
                     </div>
                     
                     <button type="submit" disabled
-                     class="submit__formulario bg-fondo text-negro__suave">Restablecer Contraseña</button>
+                     class="submit__formulario bg-azul-pizarra text-white">Restablecer Contraseña</button>
                 </form>
             </section>
-            {% if mensaje %}
-                <p class="text-errores font-bold">{{ mensaje }}</p>
-            {% endif %}
 
             <script type="module">
-                import { inicializarValidacionFormulario } from '../static/JS/formValidador.js'
+                import { inicializarValidacionFormulario } from '../../static/JS/formValidador.js'
                 const form = document.querySelector('form')
                 inicializarValidacionFormulario(form)
             </script>
@@ -50,17 +38,12 @@
             <script src="{{ url_for('static', filename='JS/tooglePassword.js') }}"></script>
 
         {% else %}
-            <section class="w-90 max-w-[90%] h-90 bg-azul__petroleo text-white m-auto shadow-2xl 
-            py-16 px-10 rounded-xl
-            flex flex-col">
-                <div class="text-center">
-                    <h2 class="text-3xl font-bold">Token Inválido 🚫</h2>
-                    <p class="mt-4">{{ mensaje }}</p>
-                </div>
+            <section style="box-shadow: var(--shadow-card)"
+            class="w-[90%] max-w-l mx-auto p-8 rounded-3xl flex flex-col gap-8 bg-white">
+                <h2 class="text-2xl text-azul-marino font-bold text-center">🚫 Token Inválido 🚫</h2>
                 <div class="mt-auto text-center">
-                    <p><a href="{{ url_for('auth.solicitar_recuperacion')}}" class= "hover:font-bold">
-                        ← Solicitar nuevo enlace</a></p>
-                    <p class="mt-4"><a href="{{ url_for('auth.login') }}" class="hover:font-bold">← Ir al Login</a></p>
+                    <p><a href="{{ url_for('auth.solicitar_recuperacion')}}">← Solicitar nuevo enlace</a></p>
+                    <p class="mt-4"><a href="{{ url_for('auth.iniciar_sesion') }}">← Ir al Login</a></p>
                 </div>
             </section>
         {% endif %}

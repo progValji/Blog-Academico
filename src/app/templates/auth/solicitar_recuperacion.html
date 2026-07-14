@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-    <section class="bg-fondo h-screen flex flex-col items-center justify-center gap-7">
+    <section>
     
-        <form method="post" class="w-[90%] max-w-lg bg-azul__petroleo text-white p-8
-        rounded-xl flex flex-col gap-8 shadow-xl">
+        <form method="post" class="w-[90%] max-w-l mx-auto p-8 rounded-3xl flex flex-col gap-8 bg-white"
+        style="box-shadow: var(--shadow-card)">
             <div>
-                <h1 class="text-3xl font-bold mb-4 sm:text-center">Resetea tu contraseña</h1>
-                <p>Introduzca la dirección de correo electrónico verificada de su cuenta de usuario y 
-                    le enviaremos un enlace para restablecer la contraseña</p>
+                <h1 class="text-3xl text-azul-marino font-bold mb-4 text-center">Resetea tu contraseña</h1>
+                <p class="text-gris-oscuro">Introduzca la dirección de correo electrónico verificada de su cuenta de usuario y 
+                    le enviaremos un enlace para restablecer la contraseña.</p>
             </div>
 
             <div class="input__formulario">
@@ -18,12 +18,8 @@
             </div>
 
             <button type="submit" disabled
-            class="submit__formulario bg-fondo text-negro__suave">Enviar Correo</button>
+            class="submit__formulario bg-azul-pizarra text-white">Enviar Correo</button>
         </form>
-
-        {% if mensaje %}
-            <h1 class="text-xl text-verde__menta font-semibold">{{mensaje}}</h1>
-        {% endif %}
 
         <script type="module">
             import { inicializarValidacionFormulario } from '../static/JS/formValidador.js'
