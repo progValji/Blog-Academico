@@ -11,8 +11,6 @@ from ..helpers import(
     calcular_retraso_exponencial,
     generar_token,
     enviar_correo,
-    agrupar_filas_posts,
-    obtener_datos_paginados,
     TIEMPO_BLOQUEADO,
     TIEMPO_TOKEN,
     login_requerido,
@@ -115,7 +113,7 @@ def registrar():
     conexion = None
     cursor = None
     if request.method == 'POST':
-        nombre = request.form.get('nombre')
+        nombre = request.form.get('nombre').capitalize
         correo = request.form.get('correo')
         contraseña = request.form.get('contraseña')
 
@@ -260,107 +258,69 @@ def restablecer_contraseña(token):
 @auth_bp.route('/perfil')
 @login_requerido
 def perfil():
-    conexion = obtener_conexion()
-    cursor = conexion.cursor(pymysql.cursors.DictCursor)
-    pagina = request.args.get('pagina', 1, type=int)
-    seccion = request.args.get('seccion', 'datos')
+    conexion = None
+    cursor = None
     try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(pymysql.cursors.DictCursor)
         cursor.execute("""
             SELECT nombre_usuario, correo, creado_en
             FROM usuarios
             WHERE id = %s
-        """, (session['user_id'],))
+        """, (session['user_id']))
         datos_personales = cursor.fetchone()
-
-        resultado, paginas = obtener_datos_paginados(
-            cursor,
-            consulta_datos="""
-            SELECT 
-                p.*,
-                IFNULL(u.nombre_usuario, 'Usuario eliminado') AS autor_nombre,
-                pm.id AS media_id,
-                pm.file_url,
-                pm.nombre_original,
-                pm.file_type,
-                (
-                    SELECT COUNT(*) 
-                    FROM comentarios c 
-                    WHERE c.post_id = p.id
-                ) AS total_comentarios
-            FROM (
-                SELECT * FROM posts
-                WHERE user_id = %s
-                ORDER BY created_at DESC
-                LIMIT %s OFFSET %s
-            ) p
-            LEFT JOIN usuarios u ON p.user_id = u.id
-            LEFT JOIN post_media pm ON p.id = pm.post_id
-            ORDER BY p.created_at DESC
-            """,
-            consulta_total="SELECT COUNT(*) as total FROM posts WHERE user_id = %s",
-            params_datos=(session.get('user_id'),),
-            params_total=(session.get('user_id'),),
-            pagina=pagina
-        )
-        posts = agrupar_filas_posts(resultado)
-
-        comentarios, paginas_comentarios = obtener_datos_paginados(
-            cursor,
-            consulta_datos="""
-                select c.id, c.post_id, c.user_id, u.nombre_usuario AS autor, c.contenido, c.created_at
-                from comentarios c
-                INNER JOIN usuarios u ON c.user_id = u.id
-                where c.user_id = %s
-                order by c.created_at DESC 
-                limit %s offset %s
-            """,
-            consulta_total="select count(*) as total from comentarios c where c.user_id = %s",
-            params_datos=(session.get('user_id'),),
-            params_total=(session.get('user_id'),),
-            pagina=pagina
-        )
+    except Exception as e:
+        if conexion: conexion.rollback()
+        flash('Inténtalo de nuevo más tarde.', 'danger')
+        return redirect(url_for('posts.index'))
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()
 
     return render_template('perfil.html',
                             user_id = session['user_id'],
                             datos_personales= datos_personales,
-                            posts = posts,
-                            paginas=paginas,
-                            comentarios=comentarios,
-                            paginas_comentario=paginas_comentarios,
-                            seccion=seccion,
                             titulo="Perfil")
 
 @auth_bp.route('/editar_perfil', methods=['POST'])
 @login_requerido
 def editar_perfil():
     nombre_usuario = request.form.get('nombre_usuario', '').strip()
-    correo = request.form.get('correo', '').strip()
+    correo = request.form.get('correo', '').strip().lower()
 
     if not nombre_usuario or not correo:
-        flash('Por favor completa los campos requeridos', 'error')
-        return redirect(url_for('perfil'))
+        flash('Por favor completa los campos requeridos', 'warning')
+        return redirect(url_for('auth.perfil'))
 
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    if validar_email(correo) is not True:
+        flash('El correo ingresado no es valido', 'warning')
+        return redirect(url_for('auth.iniciar_sesion'))
+
+    if len(nombre_usuario) > 50 or len(correo) > 100:
+        flash('Nombre de usuario o correo demasiado largo.', 'warning')
+        return redirect(url_for('auth.perfil'))
+
+    conexion = None
+    cursor = None
     try:
-        # Una sola query para verificar duplicados
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
+        # Pre-chequeo (da mensaje amigable, pero no es garantía atómica)
         cursor.execute(
-            """SELECT id, nombre_usuario, correo FROM usuarios 
+            """SELECT id, nombre_usuario, correo FROM usuarios
                WHERE (nombre_usuario = %s OR correo = %s) AND id != %s""",
             (nombre_usuario, correo, session['user_id'])
         )
         conflicto = cursor.fetchone()
 
         if conflicto:
-            _, nombre_en_uso, _ = conflicto
+            _, nombre_en_uso, correo_en_uso = conflicto
             if nombre_en_uso == nombre_usuario:
-                flash('El nombre de usuario ya está en uso.', 'error')
-            else:
-                flash('Intenta con otro correo.', 'error')
-            return redirect(url_for('perfil'))
+                flash('El nombre de usuario ya está en uso.', 'warning')
+            elif correo_en_uso == correo:
+                flash('Ese correo ya está en uso.', 'warning')
+            return redirect(url_for('auth.perfil'))
 
         cursor.execute(
             "UPDATE usuarios SET nombre_usuario = %s, correo = %s WHERE id = %s",
@@ -369,43 +329,63 @@ def editar_perfil():
         conexion.commit()
         flash('Perfil actualizado correctamente.', 'success')
         return redirect(url_for('auth.perfil'))
+    except IntegrityError:
+        if conexion:
+            conexion.rollback()
+        flash('El nombre de usuario o correo ya está en uso.', 'warning')
+        return redirect(url_for('auth.perfil'))
     except Exception as e:
-        conexion.rollback()
-        flash(f'Ocurrió un error: {e}', 'error')
-        return redirect(url_for('perfil'))
+        if conexion:
+            conexion.rollback()
+        flash('Inténtalo de nuevo más tarde.', 'error')
+        return redirect(url_for('auth.perfil'))
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()
 
 @auth_bp.route('/cambiar_contrasena', methods=['POST'])
 @login_requerido
 def cambiar_contrasena():
-    contrasena_actual = request.form.get('contrasena_actual', '').strip()
-    nueva_contrasena = request.form.get('nueva_contrasena', '').strip()
-    confirmar_contrasena = request.form.get('confirmar_contrasena', '').strip()
+    contrasena_actual = request.form.get('contrasena_actual', '')
+    nueva_contrasena = request.form.get('nueva_contrasena', '')
+    confirmar_contrasena = request.form.get('confirmar_contrasena', '')
 
     if not contrasena_actual or not nueva_contrasena or not confirmar_contrasena:
-        flash('Por favor completa todos los campos.', 'error')
+        flash('Por favor completa todos los campos.', 'warning')
         return redirect(url_for('auth.perfil'))
 
     if nueva_contrasena != confirmar_contrasena:
-        flash('Las contraseñas no coinciden.', 'error')
+        flash('Las contraseñas no coinciden.', 'warning')
         return redirect(url_for('auth.perfil'))
 
     if nueva_contrasena == contrasena_actual:
-        flash('La nueva contraseña debe ser diferente a la actual.', 'error')
-        return redirect(url_for('authperfil'))
+        flash('La nueva contraseña debe ser diferente a la actual.', 'warning')
+        return redirect(url_for('auth.perfil'))
 
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    mensaje_password = validar_password(nueva_contrasena)
+    if mensaje_password:
+        flash(mensaje_password, 'warning')
+        return redirect(url_for('auth.perfil'))
+
+    conexion = None
+    cursor = None
     try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
         cursor.execute(
             "SELECT contraseña_hash FROM usuarios WHERE id = %s",
             (session['user_id'],)
         )
         fila = cursor.fetchone()
+
+        if not fila:
+            flash('No se pudo verificar tu cuenta. Inicia sesión de nuevo.', 'warning')
+            session.clear()
+            return redirect(url_for('auth.login'))
+
         if not check_password_hash(fila[0], contrasena_actual):
-            flash('La contraseña actual es incorrecta.', 'error')
+            flash('La contraseña actual es incorrecta.', 'warning')
             return redirect(url_for('auth.perfil'))
 
         nuevo_hash = generate_password_hash(nueva_contrasena)
@@ -415,32 +395,42 @@ def cambiar_contrasena():
         )
         conexion.commit()
         flash('Contraseña actualizada correctamente.', 'success')
-        return redirect(url_for('perfil'))
+        return redirect(url_for('auth.perfil'))
     except Exception as e:
-        conexion.rollback()
-        flash(f'Ocurrió un error: {e}', 'error')
+        if conexion:
+            conexion.rollback()
+        flash('Ocurrió un error al procesar tu solicitud. Inténtalo más tarde.', 'danger')
         return redirect(url_for('auth.perfil'))
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()
 
 @auth_bp.route('/cerrar_sesion')
 def cerrar_sesion():
     session.pop('user_id', None)
+    flash('Cerraste sesión de forma correcta.', 'success')
     return redirect(url_for('posts.index'))
 
-@auth_bp.route('/eliminar_cuenta/<int:user_id>', methods=['POST'])
-def eliminar_cuenta(user_id):
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
+@auth_bp.route('/eliminar_cuenta', methods=['POST'])
+@login_requerido
+def eliminar_cuenta():
+    user_id = session['user_id'] 
+    conexion = None
+    cursor = None
     try:
-        cursor.execute("""
-            DELETE FROM usuarios WHERE id = %s
-        """, (user_id,))
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
+        cursor.execute("DELETE FROM usuarios WHERE id = %s", (user_id,))
         conexion.commit()
         borrar_archivos(user_id)
-        flash('Cuenta eliminada con exito', 'success')
-        redirect(url_for("posts.index"))
+        session.clear()  # cerrar sesión, ya no existe el usuario
+        flash('Cuenta eliminada con éxito.', 'success')
+        return redirect(url_for('posts.index'))
+    except Exception as e:
+        if conexion: conexion.rollback()
+        flash('Ocurrió un error al procesar tu solicitud. Inténtalo más tarde.', 'danger')
+        return redirect(url_for('auth.perfil'))
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()

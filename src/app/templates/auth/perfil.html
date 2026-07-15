@@ -1,9 +1,4 @@
 <style>
-    .post{
-        border: 2px solid;
-        margin-bottom: 1rem;
-    }
-
     .dropdown-content {
         display: none;
         position: absolute;
@@ -12,198 +7,104 @@
         padding: 10px;
     }
 
-    /* Clase que JS añadirá para mostrar el menú */
-    .dropdown-content.show {
-    display: block;
-    }
-
 </style>
 {% extends "base.html" %}
-{% from "macros/_post_card.html" import render_post_card %}
-{% from "macros/_comentario.html" import render_comentario %}
 {% block contenido %}
-    <h1>Perfil</h1>
+    <section class="contenedor my-12">
+        <section class=" bg-white p-8 md:p-10 rounded-3xl flex flex-col gap-8" 
+        style="box-shadow: var(--shadow-card);">
+            <div class="text-center">
+                <h1 class="text-3xl text-azul-marino font-bold mb-3">Hola {{ datos_personales.nombre_usuario }}</h1>
+                <p class="text-gris-oscuro">Aquí puedes actualizar tus datos y tu contraseña de forma segura.</p>
+            </div>
 
-    <div id="btns">
-        <button id="btns__datos">Mis datos</button>
-        <button id="btns__posts">Mis posts</button>
-        <button id="btns__comentarios">Mis comentarios</button>
-    </div>
+            <div>
+                <p class="text-gris-oscuro mb-2"><span class="font-semibold text-azul-rey">Correo:</span> {{ datos_personales.correo }}</p>
+                <p class="text-gris-oscuro"><span class="font-semibold text-azul-rey">Creado el:</span> {{ datos_personales.creado_en | tiempo_relativo }}</p>
+            </div>
 
-    <section id="secciones">
-        <section id="secciones__datos">
-            <section>
+            <hr class="text-gris-claro">
 
-                <h2>Hola {{ datos_personales.nombre_usuario }}</h2>
-                <p>Correo: {{ datos_personales.correo }}</p>
-                <p>Creado el: {{ datos_personales.creado_en | tiempo_relativo }}</p>
-                <hr>
-        
-                <!-- Formulario 1: Información básica -->
-                <section id="editar-perfil">
-                    <h2>Editar Perfil</h2>
-                    <form method="POST" action="{{ url_for('auth.editar_perfil') }}">
-                        <div class="input__formulario">
-                            <label for="nombre_usuario">Nombre de Usuario:</label>
-                            <input type="text" id="nombre_usuario" name="nombre_usuario"
-                            value="{{ datos_personales.nombre_usuario }}" required minlength="2">
-                            <span></span>
-                        </div>
-                        <div class="input__formulario">
-                            <label for="correo">Correo:</label>
-                            <input type="email" id="correo" name="correo"
-                            value="{{ datos_personales.correo }}" required>
-                            <span></span>
-                        </div>
-                        <button type="submit">Guardar Cambios</button>
-                    </form>
-                </section>
-        
-                <hr>
-        
-                <!-- Formulario 2: Cambiar contraseña -->
-                <section id="cambiar-contrasena">
-                    <h2>Cambiar Contraseña</h2>
-                    <form method="POST" action="{{ url_for('auth.cambiar_contrasena') }}">
-                        <div class="input__formulario">
-                            <label for="contrasena_actual">Contraseña Actual:</label>
-                            <input type="password" id="contrasena_actual" name="contrasena_actual"
-                            required minlength="8">
-                            <button type="button" class="tooglePassword" data-visible="false">👁️</button>
-                            <span></span>
-                        </div>
-                        <div class="input__formulario">
-                            <label for="nueva_contrasena">Nueva Contraseña</label>
-                            <input type="password" id="nueva_contrasena" name="nueva_contrasena"
-                            required minlength="8">
-                            <button type="button" class="tooglePassword" data-visible="false">👁️</button>
-                            <span></span>
-                        </div>
-                        <div class="input__formulario">
-                            <label for="confirmar_contrasena">Confirmar Nueva Contraseña</label>
-                            <input type="password" id="confirmar_contrasena" name="confirmar_contrasena"
-                            required minlength="8">
-                            <button type="button" class="tooglePassword" data-visible="false">👁️</button>
-                            <span></span>
-                        </div>
-                        <button type="submit">Cambiar Contraseña</button>
-                    </form>
-                </section>
-        
-                <hr>
-        
-                <div>
-                    <a href="{{ url_for('auth.cerrar_sesion') }}">Cerrar Sesión</a>
-                    <button
-                        type="button"
-                        data-title="¿Estás seguro de eliminar de forma permanente esta cuenta?"
-                        data-message="Esta acción no se puede deshacer."
-                        data-action="/eliminar_cuenta/{{ user_id }}"
-                        class="open_delete_modal">
-                    Eliminar Cuenta</button>
-                </div>
+            <section id="editar-perfil" class="bg-inherit p-6">
+                <h2 class="text-2xl text-azul-marino font-bold mb-4">Editar Perfil</h2>
+                <form method="POST" action="{{ url_for('auth.editar_perfil') }}" 
+                class="flex flex-col gap-6 bg-inherit">
+                    <div class="input__formulario">
+                        <input type="text" id="nombre_usuario" name="nombre_usuario" placeholder=" " required
+                        minlength="2" value="{{ datos_personales.nombre_usuario }}">
+                        <label for="nombre_usuario">Nombre de Usuario:</label>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="email" id="correo" name="correo"
+                        value="{{ datos_personales.correo }}" required>
+                        <label for="correo">Correo:</label>
+                        <span></span>
+                    </div>
+                    <button type="submit" disabled 
+                    class="submit__formulario bg-azul-pizarra text-white">Guardar Cambios</button>
+                </form>
             </section>
-        </section>
-    
-        <section id="secciones__posts">
-            <section>
-                {% if posts %}
-                    <ul>
-                        {% for post in posts %}
-                            {{ render_post_card(post, user_id, True,
-                                next_url_editar=url_for('posts.perfil', seccion='posts')) 
-                            }}   
-                        {% endfor %}
-                    </ul>
-                    {% for p in paginas %}
-                            {% if p == "..." %}
-                                <span>...</span>
-                            {% elif p == pagina %}
-                                <strong>{{ p }}</strong>
-                            {% else %}
-                                <a href="{{ url_for('posts.perfil', pagina=p, seccion='posts') }}">{{ p }}</a>
-                            {% endif %}
-                    {% endfor %}
-                {% else %}
-                    <p>Aun no tienes posts</p>
-                    <a href="{{ url_for('posts.crear_post') }}">Crea tu primer post</a>
-                {% endif %}
+
+            <hr class="text-gris-claro">
+
+            <section id="cambiar-contrasena" class="p-6 bg-inherit">
+                <h2 class="text-2xl text-azul-marino font-bold mb-4">Cambiar Contraseña</h2>
+                <form method="POST" action="{{ url_for('auth.cambiar_contrasena') }}" 
+                class="flex flex-col gap-6 bg-inherit">
+                    <div class="input__formulario">
+                        <input type="password" id="contrasena_actual" name="contrasena_actual"
+                        required minlength="8" placeholder="">
+                        <label for="contrasena_actual">Contraseña Actual</label>
+                        <button type="button" class="tooglePassword" data-visible="false">👁️</button>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="password" id="nueva_contrasena" name="nueva_contrasena"
+                        required minlength="8" placeholder="">
+                        <label for="nueva_contrasena">Nueva Contraseña</label>
+                        <button type="button" class="tooglePassword" data-visible="false">👁️</button>
+                        <span></span>
+                    </div>
+                    <div class="input__formulario">
+                        <input type="password" id="confirmar_contrasena" name="confirmar_contrasena"
+                        required minlength="8" placeholder=" ">
+                        <label for="confirmar_contrasena">Confirmar Nueva Contraseña</label>
+                        <button type="button" class="tooglePassword" data-visible="false">👁️</button>
+                        <span></span>
+                    </div>
+                    <button type="submit" disabled class="submit__formulario bg-azul-pizarra text-white">Cambiar Contraseña</button>
+                </form>
             </section>
-        </section>
-    
-        <section id="secciones__comentarios">
-            <section>
-                {% if comentarios %}
-                    <h2>Tus comentarios</h2>
-                    <ul>
-                        {% for comentario in comentarios %}
-                            {{ render_comentario(comentario, user_id, true, "perfil") }}
-                        {% endfor %}
-                    </ul>
-                    {% for p in paginas_comentario %}
-                            {% if p == "..." %}
-                                <span>...</span>
-                            {% elif p == pagina %}
-                                <strong>{{ p }}</strong>
-                            {% else %}
-                                <a href="{{ url_for('posts.perfil', pagina=p, seccion='comentarios') }}">
-                                    {{ p }}</a>
-                            {% endif %}
-                    {% endfor %}
-                {% else %}
-                    <p>No has hecho ningun comentario</p>
-                    <a href="{{ url_for('posts.index') }}">Ve al inicio y comenta algunos posts</a>
-                {% endif %}
-            </section>
+
+            <hr class="text-gris-claro">
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                <a href="{{ url_for('auth.cerrar_sesion') }}" class="text-center rounded-2xl border border-slate-300 px-5 py-3 text-azul-marino font-semibold hover:bg-slate-100 transition">Cerrar Sesión</a>
+                <button
+                    type="button"
+                    data-title="¿Estás seguro de eliminar de forma permanente esta cuenta?"
+                    data-message="Esta acción no se puede deshacer."
+                    data-action="eliminar_cuenta"
+                    class="open_delete_modal rounded-2xl bg-red-600 px-5 py-3 text-white font-semibold hover:bg-red-700 transition">
+                    Eliminar Cuenta
+                </button>
+            </div>
         </section>
     </section>
 
-    <script>
-        document.querySelectorAll('.dropdown-btn').forEach(function(button) {
-            button.addEventListener('click', function() {
-                const dropdown = this.closest('.dropdown');
-                const menu = dropdown.querySelector('.dropdown-content');
-                menu.classList.toggle('show');
-            });
-        });
-    </script>
-
     <script type="module">
         import { inicializarValidacionFormulario } from '../static/JS/formValidador.js'
-        const form = document.querySelector('#editar-perfil')
-        inicializarValidacionFormulario(form)
-        const form2 = document.querySelector('#cambiar-contrasena')
-        inicializarValidacionFormulario(form2)
-    </script>
+        const editarPerfilForm = document.querySelector('#editar-perfil form')
+        const cambiarContrasenaForm = document.querySelector('#cambiar-contrasena form')
 
-    <script src="{{ url_for('static', filename='JS/tooglePassword.js') }}"></script>
+        if (editarPerfilForm) {
+            inicializarValidacionFormulario(editarPerfilForm)
+        }
 
-    <script>
-        const btns = document.getElementById("btns");
-        const secciones = {
-            datos: document.getElementById("secciones__datos"),
-            posts: document.getElementById("secciones__posts"),
-            comentarios: document.getElementById("secciones__comentarios")
-        };
-
-        // Lee la sección desde la URL o usa "datos" por defecto
-        const seccionInicial = "{{ seccion }}";
-        // Vista predeterminada
-        mostrarSeccion(seccionInicial);
-
-        btns.addEventListener("click", (e) => {
-        const btn = e.target.closest("button[id^='btns__']");
-        if (!btn) return;
-
-        // Extrae la sección del id: "btns__posts" → "posts"
-        const seccion = btn.id.split("__")[1];
-        mostrarSeccion(seccion);
-        });
-
-        function mostrarSeccion(activa) {
-            Object.entries(secciones).forEach(([nombre, el]) => {
-                el.hidden = nombre !== activa;
-            });
+        if (cambiarContrasenaForm) {
+            inicializarValidacionFormulario(cambiarContrasenaForm)
         }
     </script>
+    <script src="{{ url_for('static', filename='JS/tooglePassword.js') }}"></script>
 {% endblock %}
