@@ -27,9 +27,11 @@ def borrar_archivos(id):
     Args:
         id (int): ID del post cuyos archivos serán eliminados
     """
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    conexion = None
+    cursor = None
     try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
         cursor.execute("SELECT file_url FROM post_media WHERE post_id = %s", (id, ))
         archivos = cursor.fetchall()
 
@@ -41,7 +43,6 @@ def borrar_archivos(id):
 
             ruta_archivo = os.path.join(
                 UPLOAD_FOLDER,
-                "uploads/posts",
                 os.path.basename(file_url)
             )
 
@@ -50,8 +51,8 @@ def borrar_archivos(id):
     except Exception as e:
         print('Error: ', e)
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()
 
 
 def extraer_archivo(fila):

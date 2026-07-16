@@ -1,10 +1,10 @@
 {% macro render_post_card(post, user_id, visualizacion_previa=None, next_url_editar=None) %}
-    <article class="post">  
-        {% if user_id %}
-            <div class="dropdown">
-                <button class="dropdown-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+    <article class="post relative">  
+        {% if user_id == post.user_id %}
+            <div class="dropdown absolute top-2 right-2">
+                <button class="dropdown-btn text-gris">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" 
+                    fill="currentColor" stroke="white" stroke-width="2" stroke-linecap="round" 
                     stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline 
                     icon-tabler-settings">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -19,22 +19,15 @@
                 </button>
                 <ul class="dropdown-content">
                     <li>
-                        {% if user_id == post.user_id %}
-                            <button 
-                                type="button" 
-                                onclick="document.getElementById('modal__edit__{{ post.id }}').showModal()">
-                                Editar</button>
                             <button 
                                 type="button"
                                 data-title="¿Estas seguro de eliminar esta publicación?"
                                 data-message="Esta acción no se puede deshacer."
                                 data-action="/eliminar_post/{{ post.id }}"
-                                class="open_delete_modal">
+                                class="open_delete_modal w-37.5 px-4 py-2 rounded-2xl text-white
+                                 bg-red-600 hover:bg-red-700">
                                 Eliminar post
                             </button>
-                        {% else %}
-                            <button>Guardar</button>
-                        {% endif %}
                     </li>
                 </ul>
             </div>

@@ -126,35 +126,14 @@ def visualizar_post(post_id):
         user_id=session.get('user_id')
     )
 
-@posts_bp.route('/editar_post/<int:post_id>', methods=['POST'])
-def editar_post(post_id):
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
-    try:
-        cursor.execute("SELECT * FROM posts WHERE id = %s", (post_id,))
-        post = cursor.fetchone()
-
-        if post is None:
-            flash('El post que intentas editar no existe.', 'error')
-            return redirect(url_for('posts.index'))
-
-        salvar_post(post_id)
-        conexion.commit()
-        flash('Post editado con éxito', 'success')
-        return redirect(url_for('posts.index'))
-    except Exception as e:
-        conexion.rollback()
-        flash('Ocurrió un error al editar el post. Inténtalo de nuevo.', 'error')
-        return redirect(url_for('posts.index'))
-    finally:
-        cursor.close()
-        conexion.close()
-
 @posts_bp.route('/eliminar_post/<int:post_id>', methods=['POST'])
+@login_requerido
 def eliminar_post(post_id):
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
+    conexion = None
+    cursor = None
     try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
         borrar_archivos(post_id)
         cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
         conexion.commit()
@@ -162,7 +141,7 @@ def eliminar_post(post_id):
         return redirect(url_for('posts.index'))
     except Exception as e:
         conexion.rollback()
-        flash('Ocurrió un error al borrar el post. Inténtalo de nuevo.', 'error')
+        flash('Ocurrió un error al borrar el post. Inténtalo de nuevo.', 'danger')
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()
