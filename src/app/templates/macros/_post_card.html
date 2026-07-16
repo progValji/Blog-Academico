@@ -1,4 +1,3 @@
-{% from "macros/_form_post.html" import form_post %}
 {% macro render_post_card(post, user_id, visualizacion_previa=None, next_url_editar=None) %}
     <article class="post">  
         {% if user_id %}
@@ -77,22 +76,5 @@
                 </div>
             </div>
         {% endif %}
-
-        <dialog id="modal__edit__{{ post.id }}">
-            <div>
-                <form method="post" action="{{ url_for('posts.editar_post', post_id=post.id) }}"
-                enctype="multipart/form-data">
-                    <input type="hidden" name="next" value="{{ next_url_editar }}">
-                    {{ form_post(
-                            submit_text = 'Guardar',
-                            titulo=post.titulo,
-                            contenido=post.contenido,
-                            adjuntos_existentes=post.archivos,
-                            cancel_type='button'
-                        ) 
-                    }}
-                </form>
-            </div>
-        </dialog>
     </article>
 {% endmacro %}

@@ -46,12 +46,12 @@ def salvar_post(post_id=None):
     Args:
         post_id (int, optional): ID del post si es edición. None si es creación
     """
-    titulo = request.form.get('titulo', '').strip()
+    titulo = request.form.get('titulo', '').strip().capitalize()
     contenido = request.form.get('contenido')
     files = request.files.getlist('adjuntos')
 
     if not titulo or not contenido:
-        flash('El título y el contenido no pueden estar vacíos.', 'error')
+        flash('El título y el contenido no pueden estar vacíos.', 'warning')
         return redirect(request.url)
 
     try:
@@ -115,7 +115,7 @@ def salvar_post(post_id=None):
         flash(mensaje, 'success')
     except Exception as e:
         conexion.rollback()
-        flash(f'Ocurrió un error: {str(e)}', 'error')
+        flash(f'Ocurrió un error: {str(e)}', 'danger')
     finally:
         cursor.close()
         conexion.close()
