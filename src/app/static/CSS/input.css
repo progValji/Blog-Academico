@@ -50,12 +50,47 @@
     .post__contenido{
         white-space: pre-wrap;
     }
+
+    .success{
+        background-color: #e0ffe0;
+        border: 1px solid #92ee96;
+        color: #253826;
+        &::after{
+            content: '✅';
+            margin-left: .3rem;
+        }
+    }
+
+    .warning{
+        background-color: #fff4dd;
+        border: 1px solid #f7ce77;
+        color: #3a3220;
+        &::after{
+            content: '⚠️';
+            margin-left: .3rem;
+        }
+    }
+
+    .danger{
+        background-color: #fff2f0;
+        border: 1px solid #ffc3bd;
+        color: #462a28;
+        &::after{
+            content: '❌';
+            margin-left: .3rem;
+        }
+    }
 }
 
 @layer components{
     .contenedor{
         width: min(1200px, 90%);
         margin: 0 auto;
+    }
+
+    .alert{
+        padding: 1rem;
+        border-radius: .8rem;
     }
 
     .submit__formulario{

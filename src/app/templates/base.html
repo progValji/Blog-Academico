@@ -8,9 +8,13 @@
     <style>
         dialog {
             border: none;
-            border-radius: 8px;
-            padding: 20px;
-            width: 300px;
+            border-radius: .8rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            background: white;
+            color: #333;
+            margin: auto;
         }
 
         /* Estilo para el fondo oscuro */
@@ -133,12 +137,12 @@
     </header>
 
     <main class="flex-1 flex flex-col justify-center">
-        <section>
+        <section class="contenedor">
             {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
                 <ul class="flashes">
                 {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
+                    <li class="alert {{ category }}">{{ message }}</li>
                 {% endfor %}
                 </ul>
             {% endif %}
@@ -149,14 +153,21 @@
     </main>
 
     <dialog id="confirm_modal">
-        <div>
-            <h2 id="confirm_modal_title"></h2>
-            <p id="confirm_modal_message"></p>
-            <div class="confirm_modal-buttons">
-                <button id="confirm_modal_cancel">Cancelar</button>
+        <div class="text-center">
+            <h2 id="confirm_modal_title"
+            class="text-2xl text-azul-marino font-bold"></h2>
+
+            <p id="confirm_modal_message"
+            class="text-gris-oscuro my-4"></p>
+
+            <div class="confirm_modal-buttons flex justify-center gap-4">
+                <button id="confirm_modal_cancel"
+                class="border border-gris rounded-xl px-8 py-2">Cancelar</button>
                 <form id="confirm_modal_form" method="POST">
                     <input type="hidden" name="next" value="{{ request.path }}">
-                    <button type="submit" id="confirm_modal_confirm">Confirmar</button>
+                    <button type="submit" id="confirm_modal_confirm"
+                    class="bg-red-600 hover:bg-red-700 text-white px-8 py-2
+                    rounded-xl">Confirmar</button>
                 </form>
             </div>
         </div>
