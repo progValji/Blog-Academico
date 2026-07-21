@@ -20,7 +20,7 @@ def salvar_comentario(comentario_id=None, post_id=None):
 
     if not texto:
         flash('El comentario no puede estar vacío.', 'error')
-        return redirect(url_for('visualizar_post', post_id=post_id))
+        return redirect(url_for('posts.visualizar_post', post_id=post_id))
 
     texto_limpio = limpiar_contenido(texto)
     try:

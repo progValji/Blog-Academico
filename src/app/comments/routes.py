@@ -7,17 +7,17 @@ from ..helpers import (
 
 @comments_bp.route('/eliminar_comentario/<int:comentario_id>', methods=['POST'])
 def eliminar_comentario(comentario_id):
-    conexion = obtener_conexion()
-    cursor = conexion.cursor()
-    next_page = request.args.get('next', 'visualizar_post')
-
+    conexion = None
+    cursor = None
     try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
         cursor.execute("SELECT post_id FROM comentarios WHERE id = %s", (comentario_id,))
         resultado = cursor.fetchone()
 
         if resultado is None:
-            flash('El comentario no existe.', 'error')
-            return redirect(url_for('index'))
+            flash('El comentario no existe.', 'warning')
+            return redirect(url_for('posts.index'))
 
         post_id = resultado[0]
 
@@ -26,13 +26,13 @@ def eliminar_comentario(comentario_id):
 
         flash('Comentario borrado con éxito', 'success')
     except Exception as e:
-        flash('Ocurrió un error al eliminar el comentario.', 'error')
+        flash('Ocurrió un error al eliminar el comentario.', 'danger')
     finally:
-        cursor.close()
-        conexion.close()
-    return redirect(url_for(next_page, post_id=post_id))
+        if cursor: cursor.close()
+        if conexion: conexion.close()
+    return redirect(url_for('posts.visualizar_post', post_id=post_id))
 
 @comments_bp.route('/agregar_comentario/<int:post_id>', methods=['POST'])
 def agregar_comentario(post_id):
     salvar_comentario(post_id=post_id)
-    return redirect(url_for('visualizar_post', post_id=post_id))
+    return redirect(url_for('posts.visualizar_post', post_id=post_id))

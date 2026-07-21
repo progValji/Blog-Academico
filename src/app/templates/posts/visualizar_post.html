@@ -1,17 +1,3 @@
-<style>
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        background-color: #f9f9f9;
-        list-style: none;
-        padding: 10px;
-    }
-
-    /* Clase que JS añadirá para mostrar el menú */
-    .dropdown-content.show {
-    display: block;
-    }
-</style>
 {% extends "base.html" %}
 {% from "macros/_comentario.html" import render_comentario %}
 {% from "macros/_post_card.html" import render_post_card %}
@@ -19,14 +5,14 @@
 {% block contenido %}
 
     {% if post %}
-        <section class="contenedor flex flex-col justify-center gap-8 h-full">
+        <section class="contenedor my-12 flex flex-col justify-center gap-8">
             <section>
                 {{ render_post_card(post, user_id, next_url_editar=url_for('posts.visualizar_post', post_id=post.id)) }}
             </section>
             <section id="comentarios">
                 <h2 class="text-2xl sm:text-3xl text-azul-marino font-semibold">Comentarios</h2>
                 <hr class="text-gris-claro">
-                <ul class="my-8">
+                <ul class="my-8 flex flex-col gap-4">
                     {% for comentario in comentarios %}
                         {{ render_comentario(comentario, user_id) }}
                     {% else %}
@@ -37,11 +23,11 @@
                 <div>
                     <form action="{{ url_for('comments.agregar_comentario', post_id=post.id) }}" method="post">
                         {% if session.get('user_id') %}
-                        <div class="form-group">
-                            <label for="texto">Comentario</label>
-                            <textarea name="texto" rows="4" required class="form-control"></textarea>
+                        <div class="mb-4">
+                            <textarea id="texto" name="texto" rows="2" placeholder="Escribe algo aqui..." required 
+                            class="resize-none w-full p-2 outline-0 border rounded-xl focus:border-azul-marino"></textarea>
                         </div>
-                        <button type="submit" class="btn">Enviar Comentario</button>
+                        <button type="submit" class="bg-azul-pizarra text-white w-full submit__formulario">Enviar Comentario</button>
                         {% else %}
                         <div class="flex flex-col gap-3 items-center justify-center">
                             <p>Debes iniciar sesión para comentar.</p>

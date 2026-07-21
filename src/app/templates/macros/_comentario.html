@@ -1,10 +1,10 @@
 {% macro render_comentario(comentario, user_id, mostrar_link_post=None, next='visualizar_post') %}
-    <li class="comentario">
+    <li class="comentario relative">
         {% if comentario.user_id == user_id %}
-            <div class="dropdown">
-                <button class="dropdown-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+            <div class="dropdown absolute top-1 right-1">
+                <button class="dropdown-btn text-gris">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" 
+                    fill="currentColor" stroke="white" stroke-width="2" stroke-linecap="round" 
                     stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline 
                     icon-tabler-settings">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -19,14 +19,14 @@
                 </button>
                 <ul class="dropdown-content">
                     <li>
-                        <button>Editar</button>
                         <button 
                             type="button"
                             data-title="¿Estas seguro de eliminar este comentario?"
                             data-message="Esta acción no se puede deshacer."
-                            data-action="/eliminar_comentario/{{ comentario.id }}?next={{ next }}"
-                            class="open_delete_modal">
-                            Eliminar comentario
+                            data-action="/comments/eliminar_comentario/{{ comentario.id }}"
+                            class="open_delete_modal w-37.5 px-4 py-2 rounded-2xl text-white
+                            bg-red-600 hover:bg-red-700">
+                            Eliminar
                         </button>
                     </li>
                 </ul>
@@ -37,10 +37,6 @@
             <small class="sm:text-base">👤 {{ comentario.autor }}</small>
         </div>
         <hr class="text-gris-claro mb-5 mt-2">
-        <p>{{ comentario.contenido | safe }}</p>
-
-        {% if mostrar_link_post %}
-            <a href="{{ url_for('visualizar_post', post_id=comentario.post_id) }}">Ver post</a>
-        {% endif %}
+        <p class="post__contenido">{{ comentario.contenido | safe }}</p>
     </li>
 {% endmacro %}

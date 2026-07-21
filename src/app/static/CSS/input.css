@@ -128,4 +128,17 @@
             color: var(--color-rojo-error);
         }
     }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 25px;
+        top: 25px;
+        list-style: none;
+    }
+
+    /* Clase que JS añadirá para mostrar el menú */
+    .dropdown-content.show {
+        display: block;
+    }
 }
