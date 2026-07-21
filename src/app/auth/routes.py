@@ -1,5 +1,5 @@
 from . import auth_bp
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, current_app
 from datetime import datetime, timedelta
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -97,9 +97,10 @@ def iniciar_sesion():
                 conexion.commit()
                 flash('Usuario o contraseña incorrectas.', 'warning')
         except Exception as e:
-            if conexion: conexion.rollback()
-            flash('Ocurrió un error al procesar tu solicitud. Intentalo más tarde.', 'warning')
-            print(e)
+            if conexion:
+                conexion.rollback()
+            current_app.logger.error(f"Error al iniciar sesión: {e}", exc_info=True)
+            flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
             return redirect(url_for('auth.iniciar_sesion'))
         finally:
             if cursor: cursor.close()
@@ -142,13 +143,17 @@ def registrar():
             session['user_name'] = nombre
             flash('Registrado con exito.', 'success')
             return redirect(url_for('auth.perfil'))
-        except IntegrityError:
-            if conexion: conexion.rollback()
+        except IntegrityError as e:
+            if conexion:
+                conexion.rollback()
+            current_app.logger.warning(f"Error de integridad al registrar usuario: {e}", exc_info=True)
             flash('Verifica la información e intenta nuevamente.', 'warning')
             return redirect(url_for('auth.registrar'))
         except Exception as e:
-            if conexion: conexion.rollback()
-            flash('Ocurrió un error al procesar tu solicitud. Intentalo más tarde.', 'warning')
+            if conexion:
+                conexion.rollback()
+            current_app.logger.error(f"Error al registrar usuario: {e}", exc_info=True)
+            flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
             return redirect(url_for('auth.registrar'))
         finally:
             if cursor: cursor.close()
@@ -188,9 +193,11 @@ def solicitar_recuperacion():
 
             flash('Si el correo existe en nuestro sistema, recibirás un enlace de recuperación.', 'success')
             return redirect(url_for('auth.solicitar_recuperacion'))
-        except Exception as e: 
-            if conexion: conexion.rollback()
-            flash('Inténtalo de nuevo más tarde.', 'danger')
+        except Exception as e:
+            if conexion:
+                conexion.rollback()
+            current_app.logger.error(f"Error al solicitar recuperación de contraseña: {e}", exc_info=True)
+            flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
             return redirect(url_for('auth.solicitar_recuperacion'))
         finally:
             if cursor: cursor.close()
@@ -270,8 +277,8 @@ def perfil():
         """, (session['user_id']))
         datos_personales = cursor.fetchone()
     except Exception as e:
-        if conexion: conexion.rollback()
-        flash('Inténtalo de nuevo más tarde.', 'danger')
+        current_app.logger.error(f"Error al cargar el perfil: {e}", exc_info=True)
+        flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
         return redirect(url_for('posts.index'))
     finally:
         if cursor: cursor.close()
@@ -329,15 +336,17 @@ def editar_perfil():
         conexion.commit()
         flash('Perfil actualizado correctamente.', 'success')
         return redirect(url_for('auth.perfil'))
-    except IntegrityError:
+    except IntegrityError as e:
         if conexion:
             conexion.rollback()
+        current_app.logger.warning(f"Error de integridad al actualizar perfil: {e}", exc_info=True)
         flash('El nombre de usuario o correo ya está en uso.', 'warning')
         return redirect(url_for('auth.perfil'))
     except Exception as e:
         if conexion:
             conexion.rollback()
-        flash('Inténtalo de nuevo más tarde.', 'error')
+        current_app.logger.error(f"Error al actualizar el perfil: {e}", exc_info=True)
+        flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
         return redirect(url_for('auth.perfil'))
     finally:
         if cursor: cursor.close()
@@ -399,7 +408,8 @@ def cambiar_contrasena():
     except Exception as e:
         if conexion:
             conexion.rollback()
-        flash('Ocurrió un error al procesar tu solicitud. Inténtalo más tarde.', 'danger')
+        current_app.logger.error(f"Error al cambiar la contraseña: {e}", exc_info=True)
+        flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
         return redirect(url_for('auth.perfil'))
     finally:
         if cursor: cursor.close()
@@ -428,8 +438,10 @@ def eliminar_cuenta():
         flash('Cuenta eliminada con éxito.', 'success')
         return redirect(url_for('posts.index'))
     except Exception as e:
-        if conexion: conexion.rollback()
-        flash('Ocurrió un error al procesar tu solicitud. Inténtalo más tarde.', 'danger')
+        if conexion:
+            conexion.rollback()
+        current_app.logger.error(f"Error al eliminar la cuenta: {e}", exc_info=True)
+        flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
         return redirect(url_for('auth.perfil'))
     finally:
         if cursor: cursor.close()

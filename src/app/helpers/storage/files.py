@@ -2,6 +2,8 @@
 Utilidades de almacenamiento y gestión de archivos
 """
 import os
+from flask import current_app
+
 from ..config import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from ..database import obtener_conexion
 
@@ -49,7 +51,8 @@ def borrar_archivos(id):
             if os.path.exists(ruta_archivo):
                 os.remove(ruta_archivo)
     except Exception as e:
-        print('Error: ', e)
+        current_app.logger.error(f"Error al eliminar archivos del post: {e}", exc_info=True)
+        raise
     finally:
         if cursor: cursor.close()
         if conexion: conexion.close()

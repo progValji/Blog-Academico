@@ -1,5 +1,5 @@
 from . import posts_bp
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort, current_app
 from ..helpers import (
     obtener_conexion,
     borrar_archivos,
@@ -14,9 +14,11 @@ import pymysql
 @posts_bp.route('/')
 def index():
     pagina = request.args.get('pagina', 1, type=int)
-    conexion = obtener_conexion()
-    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    conexion = None
+    cursor = None
     try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(pymysql.cursors.DictCursor)
         resultado, paginas = obtener_datos_paginados(
             cursor,
             consulta_datos="""
@@ -62,15 +64,21 @@ def index():
 @login_requerido
 def crear_post():
     if request.method == 'POST':
-        salvar_post()
+        try:
+            salvar_post()
+        except Exception as e:
+            current_app.logger.error(f"Error al crear el post: {e}", exc_info=True)
+            flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
         return redirect(url_for('posts.index'))
     return render_template("crear_post.html", titulo="Crea Un Post")
 
 @posts_bp.route('/visualizar_post/<int:post_id>')
 def visualizar_post(post_id):
-    conexion = obtener_conexion()
-    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    conexion = None
+    cursor = None
     try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(pymysql.cursors.DictCursor)
         cursor.execute("""
             SELECT 
                 p.*,
@@ -88,7 +96,7 @@ def visualizar_post(post_id):
         resultados = cursor.fetchall()
 
         if not resultados:
-            flash('El post que intentas visualizar no existe.', 'error')
+            flash('El post que intentas visualizar no existe.', 'warning')
             return redirect(url_for('posts.index'))
 
         post = {
@@ -113,11 +121,14 @@ def visualizar_post(post_id):
         comentarios = cursor.fetchall()
 
     except Exception as e:
-        conexion.rollback()
-        abort(500)
+        current_app.logger.error(f"Error al visualizar el post: {e}", exc_info=True)
+        flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
+        return redirect(url_for('posts.index'))
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
     return render_template(
         'visualizar_post.html',
         titulo="Detalles Post",
@@ -140,8 +151,10 @@ def eliminar_post(post_id):
         flash('Post borrado con exito', 'success')
         return redirect(url_for('posts.index'))
     except Exception as e:
-        conexion.rollback()
-        flash('Ocurrió un error al borrar el post. Inténtalo de nuevo.', 'danger')
+        if conexion:
+            conexion.rollback()
+        current_app.logger.error(f"Error al eliminar el post: {e}", exc_info=True)
+        flash('No se pudo procesar tu solicitud. Intenta más tarde.', 'danger')
     finally:
         if cursor: cursor.close()
         if conexion: conexion.close()

@@ -2,7 +2,7 @@
 Servicio de gestión de comentarios
 """
 from datetime import datetime
-from flask import request, flash, redirect, url_for, session
+from flask import request, flash, redirect, url_for, session, current_app
 
 from ..database import obtener_conexion
 from ..utils import limpiar_contenido
@@ -19,13 +19,15 @@ def salvar_comentario(comentario_id=None, post_id=None):
     texto = request.form.get('texto', '').strip()
 
     if not texto:
-        flash('El comentario no puede estar vacío.', 'error')
+        flash('El comentario no puede estar vacío.', 'warning')
         return redirect(url_for('posts.visualizar_post', post_id=post_id))
 
-    texto_limpio = limpiar_contenido(texto)
+    conexion = None
+    cursor = None
     try:
         conexion = obtener_conexion()
         cursor = conexion.cursor()
+        texto_limpio = limpiar_contenido(texto)
 
         if comentario_id:
             cursor.execute("""
@@ -41,7 +43,11 @@ def salvar_comentario(comentario_id=None, post_id=None):
             """, (post_id, user_id, texto_limpio, datetime.now()))
         conexion.commit()
     except Exception as e:
-        flash('Ocurrió un error al agregar el comentario.', 'error')
+        if conexion:
+            conexion.rollback()
+        current_app.logger.error(f"Error al guardar el comentario: {e}", exc_info=True)
+        flash('Ocurrió un error al procesar tu solicitud.', 'danger')
+        raise
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()

@@ -4,7 +4,7 @@ Servicio de gestión de posts
 import os
 import uuid
 from datetime import datetime
-from flask import request, flash, redirect, session
+from flask import request, flash, redirect, session, current_app
 from werkzeug.utils import secure_filename
 
 from ..database import obtener_conexion
@@ -54,6 +54,8 @@ def salvar_post(post_id=None):
         flash('El título y el contenido no pueden estar vacíos.', 'warning')
         return redirect(request.url)
 
+    conexion = None
+    cursor = None
     try:
         conexion = obtener_conexion()
         cursor = conexion.cursor()
@@ -114,8 +116,11 @@ def salvar_post(post_id=None):
         conexion.commit()
         flash(mensaje, 'success')
     except Exception as e:
-        conexion.rollback()
-        flash(f'Ocurrió un error: {str(e)}', 'danger')
+        if conexion:
+            conexion.rollback()
+        current_app.logger.error(f"Error al guardar el post: {e}", exc_info=True)
+        flash('Ocurrió un error al procesar tu solicitud.', 'danger')
+        raise
     finally:
-        cursor.close()
-        conexion.close()
+        if cursor: cursor.close()
+        if conexion: conexion.close()
