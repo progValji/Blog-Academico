@@ -5,6 +5,8 @@ from .helpers import UPLOAD_FOLDER
 from .helpers.filters import init_filters
 from .helpers.services.email_service import init_mail
 from .helpers.error_handlers import registrar_error_handler
+import logging
+from logging.handlers import RotatingFileHandler
 
 load_dotenv()
 
@@ -44,6 +46,25 @@ def create_app():
     
     if os.getenv('FLASK_ENV') == 'production':
         app.config['DEBUG'] = False
+
+    # --- Logging ---
+    if not app.debug and not app.testing:
+        log_dir = os.path.join(app.root_path, 'logs')
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        handler = RotatingFileHandler(
+            os.path.join(log_dir, 'blog.log'),
+            maxBytes=100000,
+            backupCount=3
+        )
+        handler.setLevel(logging.ERROR)
+        formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [en %(pathname)s:%(lineno)d]'
+        )
+        handler.setFormatter(formatter)
+        app.logger.addHandler(handler)
+        app.logger.setLevel(logging.ERROR)
 
     # REGISTRO DE BLUEPRINTS
     from .auth.routes import auth_bp
