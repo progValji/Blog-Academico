@@ -15,4 +15,4 @@ COPY . .
 
 EXPOSE 10000
 
-CMD gunicorn --bind 0.0.0.0:$PORT src.run:app
+CMD gunicorn --bind 0.0.0.0:$PORT --chdir src run:app
