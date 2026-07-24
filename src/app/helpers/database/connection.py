@@ -17,7 +17,8 @@ def obtener_conexion():
             user=current_app.config['DATABASE_USER'],
             password=current_app.config['DATABASE_PASSWORD'],
             database=current_app.config['DATABASE_NAME'],
-            ssl={"ca": current_app.config['DATABASE_SSL_CA']}
+            ssl={"ca": current_app.config['DATABASE_SSL_CA']},
+            port=int(current_app.config['DATABASE_PORT'])
         )
     except pymysql.MySQLError as e:
         current_app.logger.error(f"Error al conectar con la base de datos: {e}", exc_info=True)

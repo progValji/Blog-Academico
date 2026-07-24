@@ -9,6 +9,7 @@ class Config:
     DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
     DATABASE_NAME = os.getenv('DATABASE_NAME')
     DATABASE_SSL_CA = None
+    DATABASE_PORT = os.getenv('DATABASE_PORT')
 
 class DevelopmentConfig(Config):
     DEBUG = True
