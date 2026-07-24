@@ -114,7 +114,7 @@ def registrar():
     conexion = None
     cursor = None
     if request.method == 'POST':
-        nombre = request.form.get('nombre').capitalize
+        nombre = request.form.get('nombre').capitalize()
         correo = request.form.get('correo')
         contraseña = request.form.get('contraseña')
 
