@@ -6,6 +6,7 @@ from .helpers.services.email_service import init_mail
 from .helpers.error_handlers import registrar_error_handler
 import logging
 from logging.handlers import RotatingFileHandler
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
@@ -17,6 +18,11 @@ def create_app():
                 template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
                 static_folder='static',
                 static_url_path='/static')
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+    app.config['SERVER_NAME'] = None 
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
 
     # Configuración de Email para el entorno académico
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')

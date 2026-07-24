@@ -204,8 +204,8 @@ def solicitar_recuperacion():
             if conexion: conexion.close()
     return render_template('solicitar_recuperacion.html', titulo=titulo)
 
-@auth_bp.route('/restablecer_contraseña/<token>', methods=['GET', 'POST'])
-def restablecer_contraseña(token):
+@auth_bp.route('/restablecer_password/<token>', methods=['GET', 'POST'])
+def restablecer_password(token):
     token_valido = False
     conexion = None
     cursor = None
@@ -222,7 +222,7 @@ def restablecer_contraseña(token):
 
         if not resultado:
             flash('Token inválido o expirado. Solicita un nuevo enlace de recuperación.', 'danger')
-            return render_template('restablecer_contraseña.html', token_valido=False, titulo="Restablecer Contraseña")
+            return render_template('restablecer_password.html', token_valido=False, titulo="Restablecer Contraseña")
 
         token_valido = True
         usuario_id = resultado[0]
@@ -233,11 +233,11 @@ def restablecer_contraseña(token):
 
             if not nueva_contraseña or len(nueva_contraseña) < 8:
                 flash('❌ La contraseña debe tener al menos 8 caracteres', 'warning')
-                return render_template('restablecer_contraseña.html', token_valido=True, titulo="Restablecer Contraseña")
+                return render_template('restablecer_password.html', token_valido=True, titulo="Restablecer Contraseña")
 
             if nueva_contraseña != confirmar_contraseña:
                 flash('❌ Las contraseñas no coinciden', 'warning')
-                return render_template('restablecer_contraseña.html', token_valido=True, titulo="Restablecer Contraseña")
+                return render_template('restablecer_password.html', token_valido=True, titulo="Restablecer Contraseña")
 
             contraseña_hash = generate_password_hash(nueva_contraseña, method='pbkdf2:sha256')
             cursor.execute("""
@@ -253,7 +253,7 @@ def restablecer_contraseña(token):
 
             flash('✅ Contraseña actualizada correctamente. Ya puedes iniciar sesión.', 'success')
             return redirect(url_for('auth.iniciar_sesion'))
-        return render_template('restablecer_contraseña.html', token_valido=True, titulo="Restablecer Contraseña")
+        return render_template('restablecer_password.html', token_valido=True, titulo="Restablecer Contraseña")
     except Exception as e:
         if conexion: conexion.rollback()
         flash('Inténtalo de nuevo más tarde.', 'danger')

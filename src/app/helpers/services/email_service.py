@@ -2,6 +2,7 @@
 Servicio de envío de correos electrónicos
 """
 from flask_mail import Mail, Message
+from flask import url_for
 
 mail = Mail()
 
@@ -17,7 +18,7 @@ def enviar_correo(nombre, token, correo):
         token (str): Token de recuperación
         correo (str): Dirección de correo del usuario
     """
-    enlace_recuperacion = f'http://localhost:5000/auth/restablecer_contraseña/{token}'
+    enlace_recuperacion = url_for('auth.restablecer_password', token=token, _external=True)
     msg = Message(
         subject='Recuperación de contraseña - Blog Académico',
         recipients=[correo],
