@@ -2,7 +2,6 @@ import os
 from flask import Flask
 from dotenv import load_dotenv
 from .helpers.filters import init_filters
-from .helpers.services.email_service import init_mail
 from .helpers.error_handlers import registrar_error_handler
 import logging
 from logging.handlers import RotatingFileHandler
@@ -24,14 +23,6 @@ def create_app():
     app.config['SERVER_NAME'] = None 
     app.config['PREFERRED_URL_SCHEME'] = 'https'
 
-    # Configuración de Email para el entorno académico
-    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
-
     env = os.getenv("FLASK_ENV", "development")
 
     config = config_map.get(env)
@@ -42,9 +33,6 @@ def create_app():
 
     # Inicializar filtros personalizados
     init_filters(app)
-
-    # Inicializar el servicio de correo electrónico
-    init_mail(app)
 
     # Registrar manejadores de errores
     registrar_error_handler(app)

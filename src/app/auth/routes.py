@@ -193,6 +193,11 @@ def solicitar_recuperacion():
 
             flash('Si el correo existe en nuestro sistema, recibirás un enlace de recuperación.', 'success')
             return redirect(url_for('auth.solicitar_recuperacion'))
+        except RuntimeError as e:
+            current_app.logger.error(f"Fallo envío de correo: {e}")
+            if conexion: conexion.rollback()
+            flash('Fallo el envio de correo. Intenta mas tarde', 'danger')
+            return redirect(url_for('auth.solicitar_recuperacion'))
         except Exception as e:
             if conexion:
                 conexion.rollback()
