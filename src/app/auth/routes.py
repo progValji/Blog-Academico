@@ -14,7 +14,6 @@ from ..helpers import(
     TIEMPO_BLOQUEADO,
     TIEMPO_TOKEN,
     login_requerido,
-    borrar_archivos,
     validar_email,
     validar_password
 )
@@ -438,7 +437,6 @@ def eliminar_cuenta():
 
         cursor.execute("DELETE FROM usuarios WHERE id = %s", (user_id,))
         conexion.commit()
-        borrar_archivos(user_id)
         session.clear()  # cerrar sesión, ya no existe el usuario
         flash('Cuenta eliminada con éxito.', 'success')
         return redirect(url_for('posts.index'))

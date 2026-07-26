@@ -1,11 +1,7 @@
 """
 Utilidades de almacenamiento y gestión de archivos
 """
-import os
-from flask import current_app
-
 from ..config import ALLOWED_EXTENSIONS
-from ..database import obtener_conexion
 
 
 def allowed_file(filename):
@@ -20,41 +16,6 @@ def allowed_file(filename):
     """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def borrar_archivos(id):
-    """
-    Elimina todos los archivos asociados a un post de la carpeta de uploads
-    
-    Args:
-        id (int): ID del post cuyos archivos serán eliminados
-    """
-    conexion = None
-    cursor = None
-    try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
-        cursor.execute("SELECT file_url FROM post_media WHERE post_id = %s", (id, ))
-        archivos = cursor.fetchall()
-
-        if not archivos:
-            return
-
-        for archivo in archivos:
-            file_url = archivo[0]
-
-            ruta_archivo = os.path.join(
-                os.path.basename(file_url)
-            )
-
-            if os.path.exists(ruta_archivo):
-                os.remove(ruta_archivo)
-    except Exception as e:
-        current_app.logger.error(f"Error al eliminar archivos del post: {e}", exc_info=True)
-        raise
-    finally:
-        if cursor: cursor.close()
-        if conexion: conexion.close()
 
 
 def extraer_archivo(fila):

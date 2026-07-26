@@ -66,3 +66,40 @@ def upload_files_to_idrive(files, post_id):
         })
 
     return subidos, errores
+
+def eliminar_archivos_post_idrive(post_id):
+    """
+    Elimina TODOS los archivos de un post en IDrive e2, usando el prefijo {post_id}/
+
+    Retorna (eliminados, error):
+      eliminados: cantidad de archivos borrados
+      error: string con el mensaje de error, o None si todo salió bien
+    """
+    s3 = get_s3_client()
+    bucket = current_app.config['IDRIVE_BUCKET']
+    prefix = f"{post_id}/"
+
+    try:
+        # 1. Listar todos los objetos bajo ese prefijo
+        response = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
+        objetos = response.get('Contents', [])
+
+        if not objetos:
+            return 0, None
+
+        # 2. Armar la lista de keys a eliminar (delete_objects acepta hasta 1000 por llamada)
+        keys_a_borrar = [{'Key': obj['Key']} for obj in objetos]
+
+        s3.delete_objects(
+            Bucket=bucket,
+            Delete={'Objects': keys_a_borrar}
+        )
+
+        return len(keys_a_borrar), None
+
+    except Exception as e:
+        current_app.logger.error(
+            f"Error al eliminar archivos del post {post_id} en IDrive e2: {e}",
+            exc_info=True
+        )
+        return 0, str(e)

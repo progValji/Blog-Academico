@@ -31,9 +31,6 @@ def __getattr__(name):
     elif name == 'allowed_file':
         from .storage import allowed_file
         return allowed_file
-    elif name == 'borrar_archivos':
-        from .storage import borrar_archivos
-        return borrar_archivos
     elif name == 'extraer_archivo':
         from .storage import extraer_archivo
         return extraer_archivo
@@ -67,6 +64,9 @@ def __getattr__(name):
     elif name == 'upload_files_to_idrive':
         from .services.idrive2_service import upload_files_to_idrive
         return upload_files_to_idrive
+    elif name == 'eliminar_archivos_post_idrive':
+        from .services.idrive2_service import eliminar_archivos_post_idrive
+        return eliminar_archivos_post_idrive
     
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -93,9 +93,9 @@ __all__ = [
     'agrupar_filas_posts',
     'salvar_comentario',
     'upload_files_to_idrive',
+    'eliminar_archivos_post_idrive',
     # Storage
     'allowed_file',
-    'borrar_archivos',
     'extraer_archivo',
     # Utils
     'generar_token',

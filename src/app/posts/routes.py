@@ -2,11 +2,11 @@ from . import posts_bp
 from flask import render_template, request, redirect, url_for, flash, session, current_app
 from ..helpers import (
     obtener_conexion,
-    borrar_archivos,
     salvar_post,
     extraer_archivo,
     agrupar_filas_posts,
     obtener_datos_paginados,
+    eliminar_archivos_post_idrive
 )
 from ..helpers.decorators import login_requerido
 import pymysql
@@ -145,7 +145,14 @@ def eliminar_post(post_id):
     try:
         conexion = obtener_conexion()
         cursor = conexion.cursor()
-        borrar_archivos(post_id)
+
+        eliminados, error_idrive = eliminar_archivos_post_idrive(post_id)
+        if error_idrive:
+            flash('Ocurrió un problema al eliminar los archivos adjuntos.', 'warning')
+            current_app.logger.error(
+                f"Error al eliminar archivos en IDrive del post {post_id}: {error_idrive}"
+            )
+
         cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
         conexion.commit()
         flash('Post borrado con exito', 'success')

@@ -15,6 +15,13 @@ def __getattr__(name):
     elif name == 'salvar_comentario':
         from .comment_service import salvar_comentario
         return salvar_comentario
+    elif name == 'upload_files_to_idrive':
+        from .idrive2_service import upload_files_to_idrive
+        return upload_files_to_idrive
+    elif name == 'eliminar_archivos_post_idrive':
+        from .idrive2_service import eliminar_archivos_post_idrive
+        return eliminar_archivos_post_idrive
+    
     
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -22,6 +29,8 @@ __all__ = [
     'enviar_correo',
     'salvar_post',
     'agrupar_filas_posts',
-    'salvar_comentario'
+    'salvar_comentario',
+    'upload_files_to_idrive',
+    'eliminar_archivos_post_idrive'
 ]
 
