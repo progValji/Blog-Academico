@@ -11,6 +11,11 @@ class Config:
     DATABASE_SSL_CA = None
     DATABASE_PORT = os.getenv('DATABASE_PORT')
 
+    IDRIVE_ENDPOINT = os.getenv('IDRIVE_ENDPOINT')
+    IDRIVE_ACCESS_KEY = os.getenv('IDRIVE_ACCESS_KEY')
+    IDRIVE_SECRET_KEY = os.getenv('IDRIVE_SECRET_KEY')
+    IDRIVE_BUCKET = os.getenv('IDRIVE_BUCKET')
+
 class DevelopmentConfig(Config):
     DEBUG = True
     

@@ -64,6 +64,9 @@ def __getattr__(name):
     elif name == 'validar_password':
         from .utils.security import validar_password
         return validar_password
+    elif name == 'upload_files_to_idrive':
+        from .services.idrive2_service import upload_files_to_idrive
+        return upload_files_to_idrive
     
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -89,6 +92,7 @@ __all__ = [
     'salvar_post',
     'agrupar_filas_posts',
     'salvar_comentario',
+    'upload_files_to_idrive',
     # Storage
     'allowed_file',
     'borrar_archivos',
