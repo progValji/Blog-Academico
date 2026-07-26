@@ -74,7 +74,6 @@ from .config import (
     TIEMPO_TOKEN,
     RETRASO_BASE,
     POSTS_POR_PAGINA,
-    UPLOAD_FOLDER,
     ALLOWED_EXTENSIONS,
 )
 
@@ -108,7 +107,6 @@ __all__ = [
     'TIEMPO_TOKEN',
     'RETRASO_BASE',
     'POSTS_POR_PAGINA',
-    'UPLOAD_FOLDER',
-    'ALLOWED_EXTENSIONS',
+    'ALLOWED_EXTENSIONS'
 ]
 

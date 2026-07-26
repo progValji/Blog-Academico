@@ -10,8 +10,6 @@ from werkzeug.utils import secure_filename
 from ..database import obtener_conexion
 from ..storage import allowed_file, extraer_archivo
 from ..utils import limpiar_contenido
-from ..config import UPLOAD_FOLDER
-
 
 def agrupar_filas_posts(resultados):
     """
@@ -36,7 +34,6 @@ def agrupar_filas_posts(resultados):
         if fila.get('media_id'):
             posts_dict[post_id]['archivos'].append(extraer_archivo(fila))
     return list(posts_dict.values())
-
 
 def salvar_post(post_id=None):
     """

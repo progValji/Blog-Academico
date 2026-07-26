@@ -37,9 +37,6 @@ def create_app():
     # Registrar manejadores de errores
     registrar_error_handler(app)
 
-    if app.config.get('UPLOAD_FOLDER'):
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
     # --- Logging ---
     if not app.debug and not app.testing:
         log_dir = os.path.join(app.root_path, 'logs')

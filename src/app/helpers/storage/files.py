@@ -4,7 +4,7 @@ Utilidades de almacenamiento y gestión de archivos
 import os
 from flask import current_app
 
-from ..config import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
+from ..config import ALLOWED_EXTENSIONS
 from ..database import obtener_conexion
 
 
@@ -44,7 +44,6 @@ def borrar_archivos(id):
             file_url = archivo[0]
 
             ruta_archivo = os.path.join(
-                UPLOAD_FOLDER,
                 os.path.basename(file_url)
             )
 

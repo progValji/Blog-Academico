@@ -1,5 +1,5 @@
 from . import posts_bp
-from flask import render_template, request, redirect, url_for, flash, session, abort, current_app
+from flask import render_template, request, redirect, url_for, flash, session, current_app
 from ..helpers import (
     obtener_conexion,
     borrar_archivos,
