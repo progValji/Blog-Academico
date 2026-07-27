@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-    <section class="contenedor flex flex-col justify-center gap-8 h-full">
+    <section class="contenedor flex min-h-[calc(100vh-7rem)] flex-col justify-center gap-8 py-12">
 
-        <div class="overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div class="bg-slate-800 p-8 text-white lg:w-1/2 flex flex-col">
-                <h1 class="text-3xl sm:text-4xl font-bold text-center">Qué bueno es tenerte de vuelta</h1>
+        <div class="overflow-hidden rounded-3xl bg-white shadow-2xl lg:flex lg:items-stretch">
+            <div class="bg-slate-800 p-8 text-white lg:w-1/2 lg:px-12 lg:py-10 flex flex-col justify-center">
+                <h1 class="text-3xl sm:text-4xl font-bold text-center lg:text-left">Qué bueno es tenerte de vuelta</h1>
                 <p class="my-8 text-lg text-gris-claro">
                     Accede a tu cuenta y continúa explorando publicaciones y conversaciones.
                 </p>
-                <div class="flex flex-col gap-4 items-center sm:flex-row">
+                <div class="flex flex-col gap-4 items-center sm:flex-row sm:justify-start">
                     <a href="{{ url_for('auth.solicitar_recuperacion') }}" 
                     class="text-white underline hover:no-underline">
                         ¿Olvidaste tu contraseña?
@@ -21,7 +21,7 @@
                 </div>
             </div>
 
-            <div class="p-8">
+            <div class="p-8 lg:w-1/2 lg:p-12">
                 <form method="post" id="iniciar" class="form flex flex-col gap-4 bg-white">
                     <h1 class="text-3xl font-semibold mb-4 text-gris-oscuro sm:text-4xl">Inicia sesión</h1>
                     <div class="input__formulario">

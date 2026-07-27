@@ -10,8 +10,8 @@
 </style>
 {% extends "base.html" %}
 {% block contenido %}
-    <section class="contenedor my-12">
-        <section class=" bg-white p-8 md:p-10 rounded-3xl flex flex-col gap-8" 
+    <section class="contenedor max-w-125 my-12">
+        <section class="bg-white p-8 md:p-10 rounded-3xl grid gap-8" 
         style="box-shadow: var(--shadow-card);">
             <div class="text-center">
                 <h1 class="text-3xl text-azul-marino font-bold mb-3">Hola {{ datos_personales.nombre_usuario }}</h1>
@@ -79,7 +79,7 @@
 
             <hr class="text-gris-claro">
 
-            <div class="flex flex-col sm:flex-row gap-4 pt-2">
+            <div class="flex flex-col sm:flex-row sm:justify-center gap-4 pt-2">
                 <a href="{{ url_for('auth.cerrar_sesion') }}" class="text-center rounded-2xl border border-slate-300 px-5 py-3 text-azul-marino font-semibold hover:bg-slate-100 transition">Cerrar Sesión</a>
                 <button
                     type="button"
