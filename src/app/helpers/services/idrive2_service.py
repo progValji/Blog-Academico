@@ -103,3 +103,37 @@ def eliminar_archivos_post_idrive(post_id):
             exc_info=True
         )
         return 0, str(e)
+
+def generar_url_previsualizacion(file_url, expiracion=3600):
+    """
+    Genera una URL firmada (presigned URL) temporal para previsualizar
+    un archivo privado de IDrive e2.
+
+    file_url: la URL guardada en post_media (o la key directamente)
+    expiracion: tiempo en segundos que el link será válido (default 1 hora)
+
+    Retorna la URL firmada, o None si hubo un error.
+    """
+    s3 = get_s3_client()
+    bucket = current_app.config['IDRIVE_BUCKET']
+
+    try:
+        key = file_url.split(f"/{bucket}/", 1)[1]
+    except IndexError:
+        current_app.logger.error(f"No se pudo extraer la key de: {file_url}")
+        return None
+
+    try:
+        url_firmada = s3.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': bucket,
+                'Key': key,
+                'ResponseContentDisposition': 'inline'  # fuerza vista en navegador, no descarga
+            },
+            ExpiresIn=expiracion
+        )
+        return url_firmada
+    except Exception as e:
+        current_app.logger.error(f"Error al generar URL firmada para {key}: {e}", exc_info=True)
+        return None

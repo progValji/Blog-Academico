@@ -21,6 +21,9 @@ def __getattr__(name):
     elif name == 'eliminar_archivos_post_idrive':
         from .idrive2_service import eliminar_archivos_post_idrive
         return eliminar_archivos_post_idrive
+    elif name == 'generar_url_previsualizacion':
+        from .idrive2_service import generar_url_previsualizacion
+        return generar_url_previsualizacion
     
     
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
@@ -31,6 +34,7 @@ __all__ = [
     'agrupar_filas_posts',
     'salvar_comentario',
     'upload_files_to_idrive',
-    'eliminar_archivos_post_idrive'
+    'eliminar_archivos_post_idrive',
+    'generar_url_previsualizacion'
 ]
 

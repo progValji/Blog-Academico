@@ -28,9 +28,10 @@ def extraer_archivo(fila):
     Returns:
         dict: Diccionario con información del archivo
     """
+    from ..services.idrive2_service import generar_url_previsualizacion
     return {
         'id': fila['media_id'],
-        'ruta_archivo': fila['file_url'],
+        'ruta_archivo': generar_url_previsualizacion(fila['file_url']),
         'nombre_original': fila['nombre_original'],
         'tipo_archivo': fila['file_type']
     }

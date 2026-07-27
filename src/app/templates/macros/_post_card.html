@@ -46,15 +46,9 @@
         {% endif %}
 
         {% for media in post.archivos %}
-            {% if media.tipo_archivo == 'application/pdf' %}
-                <a href="{{ url_for('static', filename=media.ruta_archivo) }}" target="_blank">
+                <a href="{{ media.ruta_archivo }}" target="_blank">
                     📄 {{ media.nombre_original }}
                 </a><br>
-            {% elif media.tipo_archivo == 'text/plain' %}
-                <a href="{{ url_for('ver_texto', media_id=media.id) }}" target="_blank">
-                    📝 {{ media.nombre_original }}
-                </a><br>
-            {% endif %}
         {% endfor %}
         
         {% if visualizacion_previa %}
