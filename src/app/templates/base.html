@@ -31,31 +31,38 @@
         .nav__item svg{
             color: var(--color-azul-rey)
         }
+
+        @media screen and (width >= 768px){
+            .nav__item a, .nav__item svg{
+                color: white;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <header class="bg-azul-rey text-white
+    <header class="relative bg-azul-rey text-white
     sticky top-0 z-10">
         <div class="contenedor h-17.5 flex items-center justify-between">
 
             <h1 class="text-2xl font-bold"><a class="text-white" href="{{ url_for('posts.index') }}">Blog Richi</a></h1>
 
             <a href="{{ url_for('posts.crear_post') }}" title="Crear post" 
-            class="flex gap-2 px-4 py-2 border-2 rounded-2xl border-azul-rey-claro text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                fill="white" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
-                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
-                <path d="M13.5 6.5l4 4" /><path d="M16 19h6" /><path d="M19 16v6" /></svg>
-                Crea tu post
+                class="flex gap-2 px-4 py-2 border-2 rounded-2xl border-azul-rey-claro text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                    fill="white" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                    stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+                    <path d="M13.5 6.5l4 4" /><path d="M16 19h6" /><path d="M19 16v6" /></svg>
+                    Crea tu post
             </a>
 
-            <nav class="shadow-lg opacity-0 pointer-events-none absolute top-17.5 left-0 
-            w-full bg-azul-rey-claro text-black transition-opacity duration-500 
-            md:opacity-100 md:static md:w-auto md:shadow-none">
-                <ul class="flex flex-col gap-5 p-4 md:flex-row md:gap-5 md:py-0">
+            <div class="flex items-center gap-4">
+                <nav class="shadow-lg opacity-0 pointer-events-none absolute top-17.5 left-0 
+                w-full bg-azul-rey-claro text-black transition-opacity duration-500 
+                md:flex-1 md:opacity-100 md:static md:w-auto md:shadow-none md:bg-transparent md:pointer-events-auto md:text-white">
+                <ul class="flex flex-col gap-5 p-4 md:flex-row md:gap-5 md:py-0 md:px-0 md:justify-end">
                     <li class="nav__item">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
@@ -113,26 +120,27 @@
                 </ul>
             </nav>
 
-            <button id="btn-menu" class="">
-                <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" 
-                    viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" 
-                    stroke-linecap="round" stroke-linejoin="round" 
-                    class="icon icon-tabler icons-tabler-outline icon-tabler-menu-2">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 6l16 0" />
-                    <path d="M4 12l16 0" /><path d="M4 18l16 0" />
-                    </svg>
-                </span>
-                <span class="hidden">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-                     stroke-linecap="round" stroke-linejoin="round" 
-                     class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                     <path d="M18 6l-12 12" /><path d="M6 6l12 12" />
-                    </svg>
-                </span>
-            </button>
+                <button id="btn-menu" class="md:hidden">
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" 
+                        viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" 
+                        stroke-linecap="round" stroke-linejoin="round" 
+                        class="icon icon-tabler icons-tabler-outline icon-tabler-menu-2">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 6l16 0" />
+                        <path d="M4 12l16 0" /><path d="M4 18l16 0" />
+                        </svg>
+                    </span>
+                    <span class="hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+                         stroke-linecap="round" stroke-linejoin="round" 
+                         class="icon icon-tabler icons-tabler-outline icon-tabler-x">
+                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                         <path d="M18 6l-12 12" /><path d="M6 6l12 12" />
+                        </svg>
+                    </span>
+                </button>
+            </div>
         </div>
     </header>
 
